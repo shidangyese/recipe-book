@@ -433,7 +433,8 @@ body{
   box-shadow:inset 0 0 0 1px rgba(110,100,75,.14),inset 0 -8px 16px rgba(110,100,75,.12),inset 0 8px 12px rgba(255,255,255,.85),0 4px 12px rgba(105,110,88,.16);
 }
 .plate::before{content:'';position:absolute;inset:7%;border-radius:50%;border:2px dotted rgba(140,130,105,.5)}
-.plate .inner{width:70%;height:70%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--chip);box-shadow:inset 0 3px 10px rgba(90,84,60,.22)}
+.plate .inner{width:74%;height:74%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:transparent;box-shadow:inset 0 3px 12px rgba(90,84,60,.16)}
+.plate .inner .dish-art{width:86%;height:86%;color:var(--ink)}
 .plate .inner img{width:100%;height:100%;object-fit:cover}
 .plate .seal{font-family:Georgia,'Songti SC','STSong','SimSun',serif;font-weight:700;color:var(--accent);font-size:30px;line-height:1.1;text-align:center}
 .plate.sm{width:46px;flex:none}
@@ -1639,7 +1640,7 @@ function plateHtml(r, extra){
   const cls='plate'+(extra?' '+extra:'');
   let inner;
   if(r.image) inner='<img src="'+r.image+'" alt="">';
-  else inner='<span class="seal">'+esc(sealChar(r.category))+'</span>';
+  else inner='<svg viewBox="0 0 100 100" class="dish-art">'+dishArt(r)+'</svg>';
   return '<div class="'+cls+'"><div class="inner">'+inner+'</div></div>';
 }
 function sealChar(cat){
@@ -1666,6 +1667,52 @@ function renderPoster(){
   });
   $('#posterBody').innerHTML='<div class="poster-paper"><div class="poster-title">My menu</div><div class="poster-sub">— 我 的 菜 单 —</div>'+(body||'<p class="muted" style="text-align:center;padding:20px">还没有菜谱</p>')+'<div class="poster-sub" style="margin-top:16px">食 谱 小 本</div></div>';
 }
+
+
+/* ================= 手绘线稿菜品图 ================= */
+const DISH_ART = {
+wok: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 52 C18 76 34 86 50 86 C66 86 82 76 86 52\"/><path d=\"M10 52 C25 55 40 50 50 52 C60 54 78 50 90 52\"/><path d=\"M86 52 C90 50 94 48 97 45\"/><path d=\"M36 40 C34 34 38 30 36 24\"/><path d=\"M52 38 C50 32 54 28 52 22\"/></g><circle cx=\"43\" cy=\"64\" r=\"3.4\" fill=\"#c96f4a\"/><circle cx=\"55\" cy=\"68\" r=\"3\" fill=\"#c96f4a\"/><circle cx=\"63\" cy=\"61\" r=\"3\" fill=\"#c96f4a\"/>",
+soup: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 56 C20 78 34 88 50 88 C66 88 80 78 82 56\"/><path d=\"M12 56 C24 58 40 54 50 56 C60 58 76 54 88 56\"/><path d=\"M38 42 C35 35 40 30 37 23\"/><path d=\"M58 44 C55 37 60 32 57 25\"/></g><circle cx=\"42\" cy=\"66\" r=\"3.4\" fill=\"#c96f4a\"/><circle cx=\"57\" cy=\"69\" r=\"3\" fill=\"#c96f4a\"/>",
+fish: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 54 C30 42 52 40 70 50\"/><path d=\"M18 54 C30 66 52 68 70 58\"/><path d=\"M70 50 C76 46 84 44 90 44 C86 50 86 58 90 64 C84 64 76 62 70 58\"/><path d=\"M44 46 C48 51 48 57 44 62\"/><path d=\"M12 74 C30 80 70 80 88 74\"/></g><circle cx=\"32\" cy=\"52\" r=\"2.6\" fill=\"#c96f4a\"/>",
+shrimp: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M25 45 C35 30 60 26 72 38 C80 46 78 58 68 62 C60 65 52 62 50 55\"/><path d=\"M32 50 C42 44 56 44 64 50\"/><path d=\"M25 45 C20 48 18 52 20 56\"/><path d=\"M20 38 C14 34 10 32 6 33\"/><path d=\"M22 44 C16 44 12 45 8 48\"/></g><circle cx=\"68\" cy=\"42\" r=\"2.6\" fill=\"#c96f4a\"/>",
+noodles: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 56 C22 78 36 88 50 88 C64 88 78 78 80 56\"/><path d=\"M14 56 C26 59 40 55 50 57 C60 59 74 55 86 56\"/><path d=\"M34 14 L54 50\"/><path d=\"M44 10 L58 48\"/><path d=\"M50 22 C48 30 51 36 49 44\"/><path d=\"M56 24 C54 32 57 38 55 46\"/></g><circle cx=\"42\" cy=\"68\" r=\"3.4\" fill=\"#c96f4a\"/>",
+rice: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 56 C24 78 36 88 50 88 C64 88 76 78 78 56\"/><path d=\"M15 56 C26 58 40 54 50 56 C60 58 74 54 85 56\"/><path d=\"M28 54 C28 42 38 36 50 36 C62 36 72 42 72 54\"/><path d=\"M40 46 L44 50 M52 42 L54 47 M62 47 L60 51\"/></g><circle cx=\"38\" cy=\"68\" r=\"3\" fill=\"#c96f4a\"/>",
+veggie: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M50 18 C32 26 26 50 40 66 C44 71 56 71 60 66 C74 50 68 26 50 18 Z\"/><path d=\"M50 22 C47 36 47 54 50 68\"/><path d=\"M50 34 C42 36 38 40 36 44 M50 34 C58 36 62 40 64 44 M50 48 C43 50 40 53 38 56 M50 48 C57 50 60 53 62 56\"/><path d=\"M44 70 C46 76 46 80 44 84 M56 70 C54 76 54 80 56 84\"/></g>",
+dumpling: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 58 C18 42 32 30 50 30 C68 30 82 42 80 58\"/><path d=\"M20 58 C34 64 66 64 80 58\"/><path d=\"M32 40 C34 44 34 48 32 52 M42 34 C44 40 44 46 42 52 M52 32 C54 38 54 46 52 52 M62 35 C64 40 64 46 62 51 M70 42 C72 46 72 50 70 53\"/></g><circle cx=\"38\" cy=\"70\" r=\"3\" fill=\"#c96f4a\"/><circle cx=\"62\" cy=\"70\" r=\"3\" fill=\"#c96f4a\"/>",
+meat: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M24 44 C22 32 36 24 52 26 C68 28 78 38 76 50 C74 60 62 66 48 64 C34 62 25 55 24 44 Z\"/><path d=\"M36 36 C42 34 50 34 56 37 M34 46 C42 44 52 44 60 46\"/><path d=\"M76 52 L86 60 M78 58 L84 68\"/><circle cx=\"89\" cy=\"62\" r=\"4\"/><circle cx=\"84\" cy=\"70\" r=\"4\"/></g>",
+drumstick: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M38 24 C56 14 76 24 76 40 C76 52 66 58 56 58 C52 58 48 57 45 55 L36 68\"/><path d=\"M36 68 L30 76\"/><path d=\"M46 30 C56 26 66 30 68 38\"/><circle cx=\"28\" cy=\"78\" r=\"4.5\"/><circle cx=\"34\" cy=\"83\" r=\"4.5\"/></g>",
+egg: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M26 50 C22 36 34 24 50 24 C66 24 78 36 74 50 C71 62 60 68 50 68 C40 68 29 62 26 50 Z\"/></g><circle cx=\"50\" cy=\"45\" r=\"10\" fill=\"#c96f4a\"/>",
+cake: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M24 56 L24 76 L76 76 L76 56\"/><path d=\"M24 56 C32 48 40 60 50 54 C60 48 68 58 76 52\"/><path d=\"M20 76 L80 76\"/><path d=\"M36 64 L36 72 M50 62 L50 72 M64 64 L64 72\"/></g><circle cx=\"50\" cy=\"46\" r=\"5\" fill=\"#c96f4a\"/>",
+pudding: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M30 44 C30 35 40 30 50 30 C60 30 70 35 70 44 L73 60 C73 68 62 72 50 72 C38 72 27 68 27 60 Z\"/><path d=\"M30 44 C38 50 62 50 70 44\"/><path d=\"M34 54 C42 57 58 57 66 54\"/></g><circle cx=\"50\" cy=\"38\" r=\"5\" fill=\"#c96f4a\"/>",
+cup: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M34 32 L40 80 L62 80 L68 32\"/><path d=\"M30 32 L72 32\"/><path d=\"M56 12 L50 34\" stroke=\"#c96f4a\"/></g><circle cx=\"48\" cy=\"48\" r=\"3\" fill=\"#c96f4a\"/><circle cx=\"55\" cy=\"58\" r=\"3\" fill=\"#c96f4a\"/><circle cx=\"46\" cy=\"66\" r=\"3\" fill=\"#c96f4a\"/>",
+congee: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 58 C22 78 36 88 50 88 C64 88 78 78 80 58\"/><path d=\"M14 58 C26 61 40 57 50 59 C60 61 74 57 86 58\"/><path d=\"M38 44 C35 37 40 32 37 25\"/><path d=\"M58 46 C55 39 60 34 57 27\"/></g><circle cx=\"38\" cy=\"66\" r=\"3\" fill=\"#c96f4a\"/><circle cx=\"52\" cy=\"70\" r=\"3\" fill=\"#c96f4a\"/><circle cx=\"62\" cy=\"65\" r=\"3\" fill=\"#c96f4a\"/>",
+cold: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 70 C30 78 70 78 86 70\"/><circle cx=\"34\" cy=\"56\" r=\"11\"/><circle cx=\"56\" cy=\"50\" r=\"11\"/><circle cx=\"70\" cy=\"62\" r=\"11\"/></g><circle cx=\"34\" cy=\"56\" r=\"2.5\" fill=\"#c96f4a\"/><circle cx=\"56\" cy=\"50\" r=\"2.5\" fill=\"#c96f4a\"/><circle cx=\"70\" cy=\"62\" r=\"2.5\" fill=\"#c96f4a\"/>",
+braised: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 50 L22 74 C22 80 32 84 50 84 C68 84 78 80 78 74 L78 50\"/><path d=\"M16 50 C30 44 70 44 84 50\"/><path d=\"M14 58 L8 58 M86 58 L92 58\"/><path d=\"M42 52 C40 46 44 42 42 38\"/></g><circle cx=\"50\" cy=\"40\" r=\"3\" fill=\"#c96f4a\"/>",
+skewer: "<g fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 78 L80 30\"/><path d=\"M34 62 C30 54 34 46 42 46 C48 46 52 52 50 58 C48 64 40 66 34 62 Z\"/><path d=\"M52 44 C48 36 52 28 60 28 C66 28 70 34 68 40 C66 46 58 48 52 44 Z\"/></g>"
+};
+function dishArtKey(r){
+  const n=r.name||'', c=r.category||'';
+  const has=k=>n.includes(k);
+  if(has('蛋挞')||has('蛋糕')||has('饼干')||has('曲奇')||has('铜锣烧')||has('吐司')||has('披萨')||has('玛芬')) return 'cake';
+  if(has('粥')) return 'congee';
+  if(has('汤')||has('羹')||c==='汤羹') return 'soup';
+  if(has('饺子')||has('馄饨')||has('包子')||has('烧卖')) return 'dumpling';
+  if(has('面')||has('米线')||has('河粉')||has('粉')) return 'noodles';
+  if(has('饭')||has('炒饭')||has('焖饭')) return 'rice';
+  if(has('卤')||has('炖')) return 'braised';
+  if(has('串')) return 'skewer';
+  if(has('鱼')||has('鲈')||has('鲫')||c==='海鲜'&&!has('虾')) return 'fish';
+  if(has('虾')) return 'shrimp';
+  if(has('蛋')) return 'egg';
+  if(has('鸡')||has('鸭')||has('翅')||has('腿')) return 'drumstick';
+  if(has('排骨')||has('肉')||has('牛')||has('羊')||has('五花')||has('里脊')) return 'meat';
+  if(c==='饮品'||has('茶')||has('奶茶')||has('可可')||has('拿铁')||has('气泡')||has('豆浆')||has('酸梅')) return 'cup';
+  if(has('凉')||has('拌')||has('沙拉')) return 'cold';
+  if(has('茄')||has('瓜')||has('菜')||has('菇')||has('藕')||has('笋')||has('豆')||has('薯')||has('葱')||has('蒜')||has('椒')||c==='素菜') return 'veggie';
+  const map={'家常菜':'wok','荤菜':'meat','素菜':'veggie','凉菜':'cold','汤羹':'soup','主食':'rice','早餐':'egg','饮品':'cup','甜品':'pudding','烘焙':'cake','海鲜':'fish','酱料':'wok'};
+  return map[c]||'wok';
+}
+function dishArt(r){ return DISH_ART[dishArtKey(r)]||DISH_ART.wok; }
 
 /* ================= 问候语 + 今日菜单灵感卡 ================= */
 function greetingInfo(){
