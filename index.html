@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="食谱小本">
-<meta name="theme-color" content="#6f8457">
+<meta name="theme-color" content="#5c7355">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -18,14 +18,15 @@
 /* ========== 1. 主题变量 ========== */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#f4f2e9; --bg-glass:rgba(244,242,233,.88);
-  --card:#fffefa; --chip:#ebe7d9; --line:#e0dbc9;
-  --text:#3c4237; --muted:#94988a;
-  --accent:#6f8457; --accent-soft:#e7ecdc;
-  --danger:#c25b4e; --ok:#7f9c5a;
-  --warn:#d98b3f;
-  --glass:rgba(255,254,250,.85);
-  --shadow:0 2px 5px rgba(105,110,88,.08),0 8px 20px rgba(105,110,88,.06);
+  --bg:#f1ecdd; --bg-glass:rgba(241,236,221,.9);
+  --card:#fdfaf1; --chip:#ece6d4; --line:#ddd5c1;
+  --text:#3e493c; --muted:#8f9384;
+  --accent:#5c7355; --accent-soft:#e4e9db;
+  --danger:#b5544a; --ok:#6f8f57;
+  --warn:#c98a3f;
+  --ink:#3e493c;
+  --glass:rgba(253,251,242,.88);
+  --shadow:0 2px 6px rgba(105,110,88,.10),0 10px 24px rgba(105,110,88,.07);
 }
 :root[data-theme="dark"]{
   --bg:#171a14; --bg-glass:rgba(23,26,20,.88);
@@ -39,14 +40,15 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]):not([data-theme="dark"]){
-    --bg:#171a14; --bg-glass:rgba(23,26,20,.88);
-    --card:#22261c; --chip:#2d3225; --line:#383e2e;
-    --text:#eceadf; --muted:#9aa28e;
-    --accent:#a3b987; --accent-soft:#2c3524;
-    --danger:#e06a5c; --ok:#8fb372;
-    --warn:#e0a35f;
-    --glass:rgba(34,38,28,.85);
-    --shadow:0 2px 5px rgba(0,0,0,.35),0 8px 20px rgba(0,0,0,.28);
+    --bg:#191c15; --bg-glass:rgba(25,28,21,.9);
+    --card:#24281d; --chip:#2f3527; --line:#3b4232;
+    --text:#e9e9db; --muted:#99a08e;
+    --accent:#9db386; --accent-soft:#2c3524;
+    --danger:#dd6a5c; --ok:#8fb372;
+    --warn:#dfa55f;
+    --ink:#e9e9db;
+    --glass:rgba(36,40,29,.88);
+    --shadow:0 2px 6px rgba(0,0,0,.35),0 10px 24px rgba(0,0,0,.3);
   }
 }
 html{-webkit-text-size-adjust:100%;touch-action:manipulation;overscroll-behavior:none}
@@ -400,6 +402,60 @@ select.input{appearance:auto}
 }
 .toast.show{opacity:1;transform:translateX(-50%)}
 .toast.err{background:var(--danger)}
+/* ========== 手账纸感 UI ========== */
+body{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.33 0 0 0 0 0.24 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23p)'/%3E%3C/svg%3E");
+}
+.btn{border-radius:999px;letter-spacing:.15em;text-indent:.15em}
+.btn.sm{letter-spacing:.03em;text-indent:0}
+.btn.ghost{border:1px solid var(--line);background:var(--card);box-shadow:0 1px 3px rgba(105,110,88,.08)}
+.input{box-shadow:inset 0 2px 8px rgba(90,84,60,.12);border-radius:14px}
+.bottom-nav{border-radius:18px 18px 0 0;padding-left:6px;padding-right:6px}
+.bottom-nav button{padding:5px 0;border-radius:999px;margin:0 2px}
+.bottom-nav button.on{background:var(--accent);color:#fff}
+.top-tabs button.on{box-shadow:0 2px 6px rgba(105,110,88,.25)}
+.hero-date{font-size:12px;letter-spacing:3px;color:var(--muted);font-weight:700}
+.menu-book{
+  width:160px;height:102px;margin:14px auto 8px;background:var(--card);
+  border:2px solid var(--ink);border-radius:4px 12px 8px 10px;
+  box-shadow:3px 4px 0 rgba(62,73,60,.16);
+  transform:rotate(-1.6deg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;position:relative;
+}
+.menu-book::before{content:'';position:absolute;left:7px;top:10px;bottom:10px;width:0;border-left:2px dashed rgba(62,73,60,.45)}
+.menu-book .t{font-family:'Segoe Script','Snell Roundhand',cursive;font-weight:700;font-size:23px;letter-spacing:5px;color:var(--ink)}
+.menu-book .s{font-size:10px;letter-spacing:7px;color:var(--muted)}
+.menu-book .st{font-size:10px;letter-spacing:8px;color:var(--accent)}
+.hero-hi,.inspire-names{font-family:Georgia,'Songti SC','STSong','SimSun',serif}
+.plate{
+  width:100%;aspect-ratio:1/1;border-radius:50%;position:relative;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 38%,#fffefb 0%,#f8f4e9 52%,#efe9d8 76%,#e0d8c2 100%);
+  box-shadow:inset 0 0 0 1px rgba(110,100,75,.14),inset 0 -8px 16px rgba(110,100,75,.12),inset 0 8px 12px rgba(255,255,255,.85),0 4px 12px rgba(105,110,88,.16);
+}
+.plate::before{content:'';position:absolute;inset:7%;border-radius:50%;border:2px dotted rgba(140,130,105,.5)}
+.plate .inner{width:70%;height:70%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--chip);box-shadow:inset 0 3px 10px rgba(90,84,60,.22)}
+.plate .inner img{width:100%;height:100%;object-fit:cover}
+.plate .seal{font-family:Georgia,'Songti SC','STSong','SimSun',serif;font-weight:700;color:var(--accent);font-size:30px;line-height:1.1;text-align:center}
+.plate.sm{width:46px;flex:none}
+.plate.sm .seal{font-size:15px}
+.plate.sm::before{inset:10%}
+.thumb{background:transparent;padding:12px 12px 4px}
+.thumb .plate{width:86%}
+.d-banner{display:flex;align-items:center;justify-content:center;padding:22px 0}
+.d-banner .plate{width:160px;box-shadow:0 8px 20px rgba(105,110,88,.22)}
+.inspire-plates{display:flex;justify-content:center;gap:14px;margin-top:12px}
+.inspire-plates .plate{width:80px}
+.inspire{background-image:repeating-linear-gradient(0deg,rgba(120,110,85,.045) 0 2px,transparent 2px 6px),repeating-linear-gradient(90deg,rgba(120,110,85,.045) 0 2px,transparent 2px 6px)}
+.cat-chips{display:flex;flex-wrap:wrap;gap:8px}
+.cat-chip{background:var(--accent-soft);color:var(--accent);border:0;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer}
+.cat-chip.on{background:var(--accent);color:#fff}
+.poster-paper{background:var(--bg);border-radius:12px;padding:22px 16px;box-shadow:inset 0 0 0 1px var(--line)}
+.poster-title{font-family:'Segoe Script','Snell Roundhand',cursive;text-align:center;font-size:32px;color:var(--ink)}
+.poster-sub{text-align:center;font-size:11px;letter-spacing:4px;color:var(--muted);margin:2px 0 12px}
+.poster-cat{text-align:center;font-size:13px;font-weight:700;margin:14px 0 8px;color:var(--ink)}
+.poster-cat .en{display:block;font-size:10px;color:var(--muted);font-family:Georgia,serif;font-style:italic;font-weight:400;letter-spacing:1px}
+.poster-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;justify-items:center}
+.poster-grid .pname{font-size:11px;color:var(--ink);margin-top:5px;text-align:center}
 </style>
 </head>
 <body data-tab="recipes">
@@ -423,9 +479,10 @@ select.input{appearance:auto}
   <section id="view-recipes" class="view active">
     <div class="hero">
       <div class="hero-top">
-        <span class="hero-app">🍳 食谱小本 · 手账</span>
+        <span class="hero-date" id="heroDate"></span>
         <button class="hero-gear" data-action="hero-settings" aria-label="设置">⚙️</button>
       </div>
+      <div class="menu-book"><span class="t">MENU</span><span class="s">食 谱 小 本</span><span class="st">★ ★ ★</span></div>
       <h2 class="hero-hi" id="heroGreeting"></h2>
       <p class="hero-sub" id="heroSub"></p>
     </div>
@@ -443,6 +500,7 @@ select.input{appearance:auto}
     <div class="sec-head">
       <h2><span id="libLabel">我的食谱</span> <span class="muted" id="recipeCount"></span></h2>
       <div style="display:flex;gap:8px;flex:none">
+        <button class="btn ghost sm" data-action="menu-poster">📜 菜单图</button>
         <button class="btn ghost sm" data-action="open-import">📥 导入菜谱</button>
       </div>
     </div>
@@ -607,7 +665,7 @@ select.input{appearance:auto}
       <label class="f-label">名称 *</label>
       <input id="f-name" class="input" placeholder="比如：红烧排骨">
       <div class="f-grid2">
-        <div><label class="f-label">分类</label><input id="f-cat" class="input" list="catList" placeholder="家常菜"></div>
+        <div><label class="f-label">分类 *</label><input id="f-cat" type="hidden"><div class="cat-chips" id="f-cat-chips"></div></div>
         <div><label class="f-label">用时(分钟)</label><input id="f-time" class="input" type="number" min="1" inputmode="numeric" placeholder="30"></div>
         <div><label class="f-label">份量(人)</label><input id="f-serv" class="input" type="number" min="1" inputmode="numeric" placeholder="2"></div>
         <div><label class="f-label">热量(千卡/份)</label><input id="f-cal" class="input" type="number" min="0" inputmode="numeric" placeholder="约350"></div>
@@ -664,6 +722,16 @@ select.input{appearance:auto}
   <div class="sheet narrow">
     <div class="sheet-head"><h2 id="confirmTitle">确认</h2></div>
     <div class="sheet-body" id="confirmBody"></div>
+  </div>
+</div>
+
+<!-- ===== 弹窗：我的菜单图 ===== -->
+<div class="modal" id="mPoster">
+  <div class="mask" data-action="close" data-m="mPoster"></div>
+  <div class="sheet">
+    <div class="sheet-head"><h2>📜 我的菜单图</h2><button class="icon-btn" data-action="close" data-m="mPoster">✕</button></div>
+    <div class="sheet-body"><div id="posterBody"></div>
+      <p class="muted" style="font-size:12px;text-align:center;margin-top:10px">截图保存，就能分享给朋友啦</p></div>
   </div>
 </div>
 
@@ -1565,6 +1633,40 @@ function setTab(t){
 /* ================= 统一重绘 ================= */
 function renderAll(){ renderHero(); renderInspire(); renderFridgeHint(); renderRecipes(); renderFridge(); renderShopping(); renderEats(); renderSettings(); }
 
+/* ================= 手账风：白瓷盘 / 分类胶囊 / 菜单海报 ================= */
+function plateHtml(r, extra){
+  const name=(r.name||'').trim();
+  const cls='plate'+(extra?' '+extra:'');
+  let inner;
+  if(r.image) inner='<img src="'+r.image+'" alt="">';
+  else inner='<span class="seal">'+esc(sealChar(r.category))+'</span>';
+  return '<div class="'+cls+'"><div class="inner">'+inner+'</div></div>';
+}
+function sealChar(cat){
+  const map={'家常菜':'家','荤菜':'荤','素菜':'素','凉菜':'凉','汤羹':'汤','主食':'主','早餐':'早','饮品':'饮','甜品':'甜','烘焙':'烘','海鲜':'鲜','酱料':'酱'};
+  return map[cat] || (cat?cat.slice(0,1):'菜');
+}
+function renderCatChips(){
+  const std=['家常菜','荤菜','素菜','凉菜','汤羹','主食','早餐','饮品','甜品','烘焙','海鲜','酱料'];
+  const customs=[...new Set(state.recipes.map(r=>r.category).filter(c=>c&&!std.includes(c)))];
+  const all=[...std,...customs];
+  const cur=ui.form.category||'';
+  $('#f-cat-chips').innerHTML=all.map(c=>'<button type="button" class="cat-chip '+(c===cur?'on':'')+'" data-action="f-cat" data-v="'+esc(c)+'">'+esc(c)+'</button>').join('');
+}
+function renderPoster(){
+  const order=['家常菜','荤菜','素菜','凉菜','汤羹','主食','早餐','饮品','甜品','烘焙','海鲜','酱料'];
+  const en={'家常菜':'Main','荤菜':'Meat','素菜':'Veggies','凉菜':'Cold Dishes','汤羹':'Soup','主食':'Staples','早餐':'Breakfast','饮品':'Drinks','甜品':'Dessert','烘焙':'Baking','海鲜':'Seafood','酱料':'Sauce'};
+  const pool=recipePool();
+  const cats=[...new Set(pool.map(r=>r.category).filter(Boolean))];
+  const ordered=[...order.filter(c=>cats.includes(c)),...cats.filter(c=>!order.includes(c))];
+  let body='';
+  ordered.forEach(cat=>{
+    const ds=pool.filter(r=>r.category===cat);
+    body+='<div class="poster-cat">'+(en[cat]?'<span class="en">'+en[cat]+'</span>':'')+esc(cat)+'</div><div class="poster-grid">'+ds.map(d=>'<div>'+plateHtml(d)+'<div class="pname">'+esc(d.name)+'</div></div>').join('')+'</div>';
+  });
+  $('#posterBody').innerHTML='<div class="poster-paper"><div class="poster-title">My menu</div><div class="poster-sub">— 我 的 菜 单 —</div>'+(body||'<p class="muted" style="text-align:center;padding:20px">还没有菜谱</p>')+'<div class="poster-sub" style="margin-top:16px">食 谱 小 本</div></div>';
+}
+
 /* ================= 问候语 + 今日菜单灵感卡 ================= */
 function greetingInfo(){
   const h=new Date().getHours();
@@ -1575,6 +1677,9 @@ function greetingInfo(){
 }
 function renderHero(){
   const g=greetingInfo();
+  const d=new Date();
+  const WD=[['周日','Sunday'],['周一','Monday'],['周二','Tuesday'],['周三','Wednesday'],['周四','Thursday'],['周五','Friday'],['周六','Saturday']];
+  $('#heroDate').textContent=WD[d.getDay()][0]+'　'+WD[d.getDay()][1];
   $('#heroGreeting').textContent=g.hi;
   $('#heroSub').textContent=g.sub;
 }
@@ -1602,7 +1707,7 @@ function renderInspire(){
   const totalTime=dishes.reduce((s,r)=>s+(r.time||0),0);
   el.innerHTML=`
     <span class="inspire-pill">${g.meal}推荐 · ${dishes.length>1?'荤素搭配':'今日之选'}</span>
-    <div class="inspire-emoji">${dishes.map(d=>ph(d)).join(' ')}</div>
+    <div class="inspire-plates">${dishes.map(d=>plateHtml(d)).join('')}</div>
     <div class="inspire-names">${dishes.map(d=>`<button type="button" class="inspire-dish" data-action="combo-open" data-id="${d.id}">${esc(d.name)}</button>`).join('<span class="inspire-sep">·</span>')}</div>
     <div class="inspire-sub">现搭的组合，换换口味</div>
     ${totalTime?`<span class="inspire-time">⏱ 共约 ${totalTime} 分钟</span>`:''}
@@ -1621,7 +1726,7 @@ function renderCombo(){
   const totalTime=dishes.reduce((s,r)=>s+(r.time||0),0);
   $('#comboBody').innerHTML = dishes.length ? dishes.map(d=>`
     <div class="shop-item" data-action="combo-open" data-id="${d.id}" style="cursor:pointer">
-      <span style="font-size:22px">${ph(d)}</span>
+      ${plateHtml(d,'sm')}
       <div class="si-main"><span>${esc(d.name)}</span><i class="src">${esc(d.category||'未分类')}${d.time?' · 约'+d.time+'分钟':''}</i></div>
       <span class="muted">›</span>
     </div>`).join('') + `<p class="muted" style="font-size:12px;margin-top:10px">共约 ${totalTime} 分钟。点菜名看做法；加购会按食谱自动去重。</p>`
@@ -1696,7 +1801,7 @@ function recipeCardHtml(r){
   const saved = r.lib && state.recipes.some(x=>x.libId===r.id);
   return `
     <article class="rcard" data-action="open-detail" data-id="${r.id}">
-      <div class="thumb">${r.image?`<img src="${r.image}" alt="">`:`<span class="ph">${ph(r)}</span>`}</div>
+      <div class="thumb">${plateHtml(r)}</div>
       <div class="rc-body">
         <div class="rc-name">${esc(r.name)}${(!r.lib&&r.favorite)?' ⭐':''}</div>
         <div class="rc-meta">${esc(r.category||'未分类')}${r.time?` · ${r.time}分钟`:''}</div>
@@ -1711,7 +1816,7 @@ function renderRecipes(){
   const pool=recipePool();
   const cats=[...new Set(pool.map(r=>r.category).filter(Boolean))];
   const chips=[{k:'all',label:'全部'}];
-  if(ui.libMode==='mine') chips.push({k:'__fav',label:'⭐ 收藏'});
+  if(ui.libMode==='mine') chips.push({k:'__fav',label:'⭐ 想吃的'},{k:'__cooked',label:'🔥 我烧过的'});
   chips.push(...cats.map(c=>({k:c,label:c})));
   $('#chipsBar').innerHTML=chips.map(c=>
     `<button class="chip ${ui.cat===c.k?'on':''}" data-action="cat" data-k="${esc(c.k)}">${esc(c.label)}</button>`).join('');
@@ -1722,6 +1827,7 @@ function renderRecipes(){
 
   let list=pool.filter(r=>{
     if(ui.libMode==='mine' && ui.cat==='__fav' && !r.favorite) return false;
+    if(ui.libMode==='mine' && ui.cat==='__cooked' && !(r.cookedCount>0)) return false;
     if(ui.cat!=='all' && ui.cat!=='__fav' && r.category!==ui.cat) return false;
     return true;
   });
@@ -1764,7 +1870,7 @@ function renderDetail(){
   const lib=!!r.lib;
   const saved = lib && state.recipes.some(x=>x.libId===r.id);
   $('#detailBody').innerHTML=`
-    ${r.image?`<img class="d-img" src="${r.image}" alt="">`:`<div class="d-banner">${ph(r)}</div>`}
+    ${r.image?`<img class="d-img" src="${r.image}" alt="">`:`<div class="d-banner">${plateHtml(r)}</div>`}
     <div class="d-head">
       <h2>${esc(r.name)}</h2>
       <div class="d-meta">${[lib?'📚 菜谱库':'', r.category?`🏷 ${esc(r.category)}`:'', r.time?`⏱ ${r.time} 分钟`:'', r.servings?`🍽 ${r.servings} 人份`:'', r.calories?`🔥 约 ${r.calories} 千卡/份`:'', r.cookedCount?`🍳 做过 ${r.cookedCount} 次`:'', r.lastCookedAt?`🕐 上次 ${new Date(r.lastCookedAt).getMonth()+1}/${new Date(r.lastCookedAt).getDate()}`:''].filter(Boolean).map(x=>`<span class="chip sm">${x}</span>`).join('')}</div>
@@ -1818,7 +1924,7 @@ function openForm(id, draft){
   $('#f-name').value=ui.form.name; $('#f-cat').value=ui.form.category;
   $('#f-time').value=ui.form.time; $('#f-serv').value=ui.form.servings; $('#f-cal').value=ui.form.cal;
   $('#f-tags').value=ui.form.tagsStr; $('#f-notes').value=ui.form.notes;
-  refreshImgPreview(); renderIngList(); renderStepList();
+  renderCatChips(); refreshImgPreview(); renderIngList(); renderStepList();
   open('mForm');
   setTimeout(()=>$('#f-name').focus(), 250);
 }
@@ -2386,7 +2492,7 @@ function renderShare(){
   const canNative=!!navigator.share;
   $('#shareBody').innerHTML=`
     <div class="rand-card" style="padding-top:0">
-      <div class="big">${ph(r)}</div>
+      <div style="width:110px;margin:0 auto 6px">${plateHtml(r)}</div>
       <h2>${esc(r.name)}</h2>
       <p class="muted" style="max-width:300px;margin:0 auto">发给朋友后，对方在「食谱小本」里点 <b>📥 导入菜谱</b>，粘贴就能收藏这道菜。</p>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
@@ -2777,6 +2883,8 @@ document.addEventListener('click', e=>{
     }
     case 'add-shop-from': addFromRecipe(el.dataset.id); break;
     case 'hero-settings': setTab('settings'); break;
+    case 'f-cat': ui.form.category=el.dataset.v; $('#f-cat').value=ui.form.category; renderCatChips(); break;
+    case 'menu-poster': renderPoster(); open('mPoster'); break;
     case 'inspire-again': pickInspire(); renderInspire(); break;
     case 'inspire-go': ui.comboIds=[...(ui.inspire||[])]; renderCombo(); open('mCombo'); break;
     case 'combo-open': close('mCombo'); openDetail(el.dataset.id); break;
@@ -2989,7 +3097,7 @@ document.addEventListener('click', e=>{
       $('#pickList').innerHTML = list.length
         ? `<p class="muted" style="font-size:13px;margin-bottom:10px">点一道菜，它的食材会自动加入购物清单（自动去重）。</p>`+
           list.map(r=>`<div class="shop-item" data-action="pick-recipe" data-id="${r.id}" style="cursor:pointer">
-            <span style="font-size:22px">${ph(r)}</span>
+            ${plateHtml(r,'sm')}
             <div class="si-main"><span>${esc(r.name)}</span><i class="src">${esc(r.category||'未分类')} · ${(r.ingredients||[]).length} 种食材</i></div>
             <span class="muted">›</span></div>`).join('')
         : `<div class="empty"><div class="big"> cookbook</div><p>还没有食谱，先去记一道吧</p></div>`;
