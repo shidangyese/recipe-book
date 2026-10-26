@@ -403,6 +403,12 @@ select.input{appearance:auto}
 .toast.show{opacity:1;transform:translateX(-50%)}
 .toast.err{background:var(--danger)}
 /* ========== 手账纸感 UI ========== */
+.icon-btn{width:36px;height:36px}
+.bottom-nav button{position:relative}
+.navdot{position:absolute;top:0;right:calc(50% - 26px);min-width:16px;height:16px;border-radius:999px;background:var(--danger);color:#fff;font-size:10px;line-height:16px;padding:0 4px;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+#recipeGrid{padding-bottom:72px}
+.shop-input .input{min-height:44px}
+.shop-input .btn{min-width:74px}
 .bottom-nav .ico{width:27px;height:27px;display:block;margin:0 auto}
 .bottom-nav .ico svg{width:100%;height:100%}
 .bottom-nav button.on{background:var(--accent-soft);color:var(--ink)}
@@ -533,7 +539,7 @@ body{
       <button data-action="lib-mode" data-m="lib">📚 菜谱库</button>
     </div>
     <div class="search-row">
-      <input id="searchInput" class="input" placeholder="🔍 搜名称、食材、标签；或输入冰箱里的食材找菜谱">
+      <input id="searchInput" class="input" type="search" placeholder="🔍 搜名称、食材、标签；或输入冰箱里的食材找菜谱">
       <button class="btn ghost" id="btnFridgeRec" data-action="fridge-rec" title="按冰箱里的食材推荐" aria-label="按冰箱推荐" style="flex:none;width:48px;padding:0;font-size:19px">🧊</button>
     </div>
     <div class="chips" id="chipsBar"></div>
@@ -600,7 +606,7 @@ body{
       <button class="btn sm" data-action="eat-add">＋ 记一笔</button>
     </div>
     <div class="search-row" style="margin-bottom:12px">
-      <input id="eatSearch" class="input" placeholder="🔍 搜店名、菜品、感想…">
+      <input id="eatSearch" class="input" type="search" placeholder="🔍 搜店名、菜品、感想…">
     </div>
     <div id="eatList"></div>
   </section>
@@ -1674,7 +1680,19 @@ function setTab(t){
 }
 
 /* ================= 统一重绘 ================= */
-function renderAll(){ renderHero(); renderInspire(); renderFridgeHint(); renderRecipes(); renderFridge(); renderShopping(); renderEats(); renderSettings(); }
+function renderAll(){ renderHero(); renderInspire(); renderFridgeHint(); renderRecipes(); renderFridge(); renderShopping(); renderEats(); renderSettings(); renderNavBadges(); }
+/* 底栏红点：购物待买数 / 冰箱快到期数 */
+function renderNavBadges(){
+  const pend=state.shopping.filter(s=>!s.checked).length;
+  const exp=(state.fridge||[]).filter(it=>{ const i=expiryInfo(it); return !i.staple && i.remain<=2; }).length;
+  [['shopping',pend],['fridge',exp]].forEach(([tab,n])=>{
+    document.querySelectorAll('.bottom-nav [data-tab="'+tab+'"]').forEach(b=>{
+      let d=b.querySelector('.navdot');
+      if(n>0){ if(!d){ d=document.createElement('span'); d.className='navdot'; b.appendChild(d); } d.textContent=n>99?'99+':String(n); }
+      else if(d) d.remove();
+    });
+  });
+}
 
 /* ================= 手账风：白瓷盘 / 分类胶囊 / 菜单海报 ================= */
 function plateHtml(r, extra){
@@ -2902,7 +2920,10 @@ document.addEventListener('click', e=>{
   if(chkShop){
     e.preventDefault();
     const s=state.shopping.find(x=>x.id===chkShop.dataset.checkShop);
-    if(s){ s.checked=!s.checked; save(); renderAll(); }
+    if(s){
+      s.checked=!s.checked; save(); renderAll();
+      if(s.checked && state.shopping.length && state.shopping.every(x=>x.checked)) setTimeout(()=>toast('🎉 全部买齐，该下厨啦！'),350);
+    }
     return;
   }
   const chkIng = e.target.closest('input[data-check-ing]');
@@ -2917,8 +2938,12 @@ document.addEventListener('click', e=>{
   const el=e.target.closest('[data-action],[data-tab],[data-ci]');
   if(!el) return;
 
-  // Tab 按钮
-  if(el.dataset.tab){ setTab(el.dataset.tab); return; }
+  // Tab 按钮（再点当前标签 = 平滑回顶部）
+  if(el.dataset.tab){
+    if(el.dataset.tab===ui.tab){ window.scrollTo({top:0, behavior:'smooth'}); }
+    else { setTab(el.dataset.tab); }
+    return;
+  }
 
   // 确认框按钮
   if(el.dataset.ci!==undefined){
@@ -3284,6 +3309,32 @@ document.addEventListener('keydown', e=>{
       if(addShopItem(n.value,a.value,'')){ save(); renderAll(); n.value=''; a.value=''; n.focus(); }
       else toast('清单里已经有这项了');
     }
+  }
+});
+
+/* ================= 操作优化：滑动切页 / 回车确认 ================= */
+let uxTouchX=null, uxTouchY=null, uxTouchT=0;
+document.addEventListener('touchstart', e=>{
+  if(document.querySelector('.modal.open')){ uxTouchX=null; return; }
+  if(e.target.closest('input,textarea,select,.bottom-nav,.top-tabs,.chips')){ uxTouchX=null; return; }
+  const t=e.touches[0]; uxTouchX=t.clientX; uxTouchY=t.clientY; uxTouchT=Date.now();
+},{passive:true});
+document.addEventListener('touchend', e=>{
+  if(uxTouchX===null) return;
+  const t=e.changedTouches[0];
+  const dx=t.clientX-uxTouchX, dy=t.clientY-uxTouchY;
+  const order=['recipes','fridge','shopping','eats','settings'];
+  if(Date.now()-uxTouchT<650 && Math.abs(dx)>72 && Math.abs(dx)>Math.abs(dy)*1.8 && !document.querySelector('.modal.open')){
+    const i=order.indexOf(ui.tab);
+    const j=Math.min(order.length-1, Math.max(0, i+(dx<0?1:-1)));
+    if(j!==i) setTab(order[j]);
+  }
+  uxTouchX=null;
+},{passive:true});
+document.addEventListener('keydown', e=>{
+  if(e.key==='Enter' && document.querySelector('#mConfirm').classList.contains('open')){
+    const btns=[...document.querySelectorAll('#confirmBody .btn')];
+    if(btns.length){ btns[btns.length-1].click(); }
   }
 });
 
