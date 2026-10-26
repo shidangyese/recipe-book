@@ -280,6 +280,7 @@ select.input{appearance:auto}
 .eci-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .eci-head b{font-size:16px}
 .eci-meta{font-size:13px;color:var(--muted);margin-top:4px}
+.eci-photo{width:100%;max-height:170px;object-fit:cover;border-radius:10px;margin-top:8px}
 .eci-note{font-size:13px;margin-top:8px}
 .tagline{display:flex;gap:6px;flex-wrap:wrap;margin-top:16px}
 
@@ -723,6 +724,15 @@ select.input{appearance:auto}
       <input id="ea-loc" class="input" placeholder="比如：朝阳大悦城 5 层">
       <label class="f-label">值不值得？</label>
       <div class="stars" id="ea-stars"></div>
+      <label class="f-label">拍一张（可选）</label>
+      <div class="img-pick">
+        <img id="ea-photo" hidden alt="探店照片">
+        <div id="ea-photo-empty" class="img-empty">📷<br>拍下店招或菜品</div>
+        <div class="img-btns">
+          <label class="btn ghost sm file-btn">📷 拍照 / 选图<input id="fileEatImg" type="file" accept="image/*" hidden></label>
+          <button class="btn danger-ghost sm" type="button" data-action="ea-photo-rm" id="ea-photo-rm" hidden>移除</button>
+        </div>
+      </div>
       <label class="f-label">感想</label>
       <textarea id="ea-note" class="input" rows="3" placeholder="比如：适合带朋友来，环境吵了点，牛肉丸必点"></textarea>
     </div>
@@ -2191,13 +2201,19 @@ function renderEats(){
       <div class="eci-head"><b>${esc(e.name)}</b><span class="ci-stars">${e.stars?'★'.repeat(e.stars):''}<span class="dim">${'☆'.repeat(5-(e.stars||0))}</span></span></div>
       ${e.dish?`<div class="eci-meta">🍽 ${esc(e.dish)}</div>`:''}
       <div class="eci-meta">${[e.price?`人均 ¥${e.price}`:'', e.loc?`📍 ${esc(e.loc)}`:'', exp].filter(Boolean).join(' · ')}</div>
+      ${e.photo?`<img class="eci-photo" src="${e.photo}" alt="">`:''}
       ${e.note?`<p class="eci-note">${esc(e.note)}</p>`:''}
     </div>`;
   }).join('') : `<div class="empty" style="padding:30px"><div class="big">🍽️</div><p>${q?'没有匹配的探店记录':'还没记过探店<br>在外面吃到好吃的，随手记下来'}</p></div>`;
 }
+function refreshEatPhoto(){
+  const has=!!(ui.eat&&ui.eat.photo);
+  $('#ea-photo').hidden=!has; $('#ea-photo-empty').hidden=has; $('#ea-photo-rm').hidden=!has;
+  if(has) $('#ea-photo').src=ui.eat.photo;
+}
 function openEat(eatId){
   const e=eatId?(state.eats||[]).find(x=>x.id===eatId):null;
-  ui.eat=eatId?{id:eatId}:{new:true};
+  ui.eat={id:eatId||null, photo:e?(e.photo||null):null};
   $('#eatTitle').textContent=e?'编辑探店':'记一笔探店';
   $('#ea-name').value=e?e.name:''; $('#ea-dish').value=e?e.dish||'':'';
   $('#ea-price').value=e&&e.price?e.price:''; $('#ea-loc').value=e?e.loc||'':'';
@@ -2207,6 +2223,7 @@ function openEat(eatId){
   ui.eatStars=e?e.stars||0:0;
   $('#ea-stars').innerHTML=starsHtml('eat', ui.eatStars);
   $('#ea-del-btn').hidden=!e;
+  refreshEatPhoto();
   open('mEat');
 }
 function saveEat(){
@@ -2215,7 +2232,7 @@ function saveEat(){
   const d=$('#ea-date').value;
   const data={ name, dish:$('#ea-dish').value.trim(), price:$('#ea-price').value?+$('#ea-price').value:null,
     loc:$('#ea-loc').value.trim(), ts:d?new Date(d+'T12:00:00').getTime():Date.now(),
-    stars:ui.eatStars||0, note:$('#ea-note').value.trim(), createdAt:Date.now(), updatedAt:Date.now() };
+    photo:ui.eat.photo||null, stars:ui.eatStars||0, note:$('#ea-note').value.trim(), createdAt:Date.now(), updatedAt:Date.now() };
   if(ui.eat && ui.eat.id){
     const e=state.eats.find(x=>x.id===ui.eat.id);
     Object.assign(e, data);
@@ -2790,6 +2807,7 @@ document.addEventListener('click', e=>{
     }
     case 'cook-log-save': saveCookLog(); break;
     case 'cl-photo-rm': ui.clog.photo=null; refreshCookPhoto(); break;
+    case 'ea-photo-rm': if(ui.eat){ ui.eat.photo=null; refreshEatPhoto(); } break;
     case 'star': {
       const v=+el.dataset.v;
       if(el.dataset.g==='cook'){ ui.clog.stars=v; renderCookStars(); }
@@ -3041,6 +3059,12 @@ document.addEventListener('change', e=>{
       .catch(()=>{ ui.ocr.error='图片读取失败'; renderOcr(); });
     t.value='';
   }
+  if(t.id==='fileEatImg'){
+    const f=t.files[0]; if(!f || !ui.eat) return;
+    compressImage(f, 600, 0.78).then(url=>{ ui.eat.photo=url; refreshEatPhoto(); })
+      .catch(()=>toast('图片处理失败', true));
+    t.value='';
+  }
   if(t.id==='fileCookLogImg'){
     const f=t.files[0]; if(!f || !ui.clog) return;
     compressImage(f, 600, 0.78).then(url=>{ ui.clog.photo=url; refreshCookPhoto(); })
@@ -3085,6 +3109,9 @@ document.addEventListener('keydown', e=>{
 
 /* ================= 启动 ================= */
 applyTheme();
+if('serviceWorker' in navigator && (location.protocol==='https:' || ['localhost','127.0.0.1'].includes(location.hostname))){
+  addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{ if(state.settings.theme==='auto') applyTheme(); });
 setTab('recipes');
 doSync();
