@@ -403,6 +403,15 @@ select.input{appearance:auto}
 .toast.show{opacity:1;transform:translateX(-50%)}
 .toast.err{background:var(--danger)}
 /* ========== 手账纸感 UI ========== */
+:root{--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.33 0 0 0 0 0.24 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23p)'/%3E%3C/svg%3E")}
+body.ux-lock{overflow:hidden}
+.slide-ghost{position:fixed;inset:0;z-index:24;overflow:hidden;background:var(--bg);background-image:var(--grain);box-shadow:-16px 0 32px rgba(60,60,40,.18)}
+.coach{
+  position:fixed;left:14px;right:14px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:29;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;
+  font-size:13px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;gap:10px;
+}
+.coach button{flex:none;background:var(--accent);color:#fff;border:0;border-radius:999px;padding:6px 14px;font-size:12px}
 .icon-btn{width:36px;height:36px}
 .bottom-nav button{position:relative}
 .navdot{position:absolute;top:0;right:calc(50% - 26px);min-width:16px;height:16px;border-radius:999px;background:var(--danger);color:#fff;font-size:10px;line-height:16px;padding:0 4px;box-shadow:0 1px 3px rgba(0,0,0,.2)}
@@ -415,7 +424,7 @@ select.input{appearance:auto}
 .fcard .pic svg{width:66px;height:66px;margin:0 auto;display:block}
 .plate .inner svg{width:88%;height:88%}
 body{
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.33 0 0 0 0 0.24 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23p)'/%3E%3C/svg%3E");
+  background-image:var(--grain);
 }
 .btn{border-radius:999px;letter-spacing:.15em;text-indent:.15em}
 .btn.sm{letter-spacing:.03em;text-indent:0}
@@ -641,6 +650,10 @@ body{
       <div class="set-row">
         <button class="btn ghost" data-action="sync-now">🔄 立即同步</button>
       </div>
+      <details>
+        <summary>👆 手势与快捷操作</summary>
+        <p>左右滑动屏幕切换页面 · 再点底栏当前页回到顶部 · 底栏红点=待买/快到期提醒 · 点菜品白瓷盘看做法 · 冰箱点卡片改数量和保鲜天数 · ⭐想吃的/🔥我烧过的一键筛选 · 菜单图截图分享</p>
+      </details>
       <details style="margin-top:10px">
         <summary>这是什么数据库？多设备怎么同步？</summary>
         <p>在电脑上运行 <b>node server.js</b>（保持窗口开着），应用会把你的食谱、购物清单、冰箱自动同步进同目录的 recipes.db（SQLite 数据库文件）。同一 WiFi 下的手机/电脑用浏览器访问时，读写的是同一个库，改一处处处生效。数据同时也留在每台设备本地，断网照常使用，恢复联网自动合并。</p>
@@ -951,6 +964,7 @@ body{
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="coach" id="coachSwipe" hidden>💡 左右滑动屏幕，可以切换页面哦<button data-action="coach-ok">知道了</button></div>
 
 <script>
 'use strict';
@@ -975,7 +989,7 @@ body{
 })();
 /* ================= 数据 ================= */
 const LS_KEY = 'recipeBook.v1';
-const DEFAULT_STATE = { recipes: [], shopping: [], fridge: [], eats: [], settings: { theme: 'auto' }, firstDone: false, tombstones: { recipes: {}, shopping: {}, fridge: {}, eats: {} } };
+const DEFAULT_STATE = { recipes: [], shopping: [], fridge: [], eats: [], settings: { theme: 'auto' }, firstDone: false, coachSwipe: false, tombstones: { recipes: {}, shopping: {}, fridge: {}, eats: {} } };
 
 let state = load();
 function load(){
@@ -992,6 +1006,7 @@ function load(){
       eats: Array.isArray(s.eats) ? s.eats : [],
       settings: Object.assign({theme:'auto'}, s.settings||{}),
       firstDone: !!s.firstDone,
+      coachSwipe: !!s.coachSwipe,
       tombstones: { recipes:(tombs.recipes||{}), shopping:(tombs.shopping||{}), fridge:(tombs.fridge||{}), eats:(tombs.eats||{}) }
     };
   }catch(e){ return JSON.parse(JSON.stringify(DEFAULT_STATE)); }
@@ -1676,6 +1691,8 @@ function setTab(t){
     if(b.closest('.top-tabs') || b.closest('.bottom-nav')) b.classList.toggle('on', b.dataset.tab===t);
   });
   window.scrollTo(0,0);
+  const cs=document.getElementById('coachSwipe');
+  if(cs) cs.hidden = !(t==='recipes' && !state.coachSwipe);
   renderAll();
 }
 
@@ -2978,6 +2995,7 @@ document.addEventListener('click', e=>{
     }
     case 'add-shop-from': addFromRecipe(el.dataset.id); break;
     case 'hero-settings': setTab('settings'); break;
+    case 'coach-ok': state.coachSwipe=true; save(); const c=document.getElementById('coachSwipe'); if(c) c.hidden=true; break;
     case 'f-cat': ui.form.category=el.dataset.v; $('#f-cat').value=ui.form.category; renderCatChips(); break;
     case 'menu-poster': renderPoster(); open('mPoster'); break;
     case 'inspire-again': pickInspire(); renderInspire(); break;
@@ -3312,29 +3330,71 @@ document.addEventListener('keydown', e=>{
   }
 });
 
-/* ================= 操作优化：滑动切页 / 回车确认 ================= */
-let uxTouchX=null, uxTouchY=null, uxTouchT=0;
+/* ================= 操作优化：丝滑滑动切页 / 回车确认 ================= */
+const UX_ORDER=['recipes','fridge','shopping','eats','settings'];
+let uxX=null, uxY=null, uxSlide=null;
+function uxLock(on){ document.body.classList.toggle('ux-lock', on); }
+function uxSlideBegin(dir){
+  if(uxSlide) return false;
+  const i=UX_ORDER.indexOf(ui.tab), j=i+(dir<0?1:-1);
+  if(j<0 || j>=UX_ORDER.length) return false;
+  const target=document.getElementById('view-'+UX_ORDER[j]);
+  if(!target) return false;
+  const ghost=target.cloneNode(true);
+  ghost.classList.add('slide-ghost'); ghost.removeAttribute('id');
+  ghost.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));
+  document.body.appendChild(ghost);
+  uxSlide={ to:UX_ORDER[j], dir, ghost, cur:document.getElementById('view-'+ui.tab), w:window.innerWidth };
+  uxLock(true);
+  return true;
+}
+function uxSlideMove(dx){
+  if(!uxSlide) return;
+  uxSlide.ghost.style.transform='translateX('+(uxSlide.dir<0 ? (uxSlide.w+dx) : (dx-uxSlide.w))+'px)';
+  if(uxSlide.cur) uxSlide.cur.style.transform='translateX('+(dx*0.22)+'px)';
+}
+function uxSlideEnd(commit){
+  if(!uxSlide) return;
+  const s=uxSlide; uxSlide=null;
+  const off=s.dir<0 ? s.w : -s.w;
+  s.ghost.style.transition='transform 240ms cubic-bezier(.22,.68,.3,1)';
+  if(s.cur) s.cur.style.transition='transform 240ms ease';
+  requestAnimationFrame(()=>{
+    if(commit){ s.ghost.style.transform='translateX(0)'; if(s.cur) s.cur.style.transform='translateX('+(s.dir<0?'-24%':'24%')+'px)'; }
+    else { s.ghost.style.transform='translateX('+(s.dir<0? off : -off)+'px)'; if(s.cur) s.cur.style.transform=''; }
+  });
+  setTimeout(()=>{
+    if(commit) setTab(s.to);
+    s.ghost.remove(); if(s.cur){ s.cur.style.transform=''; s.cur.style.transition=''; }
+    uxLock(false);
+  }, 250);
+}
 document.addEventListener('touchstart', e=>{
-  if(document.querySelector('.modal.open')){ uxTouchX=null; return; }
-  if(e.target.closest('input,textarea,select,.bottom-nav,.top-tabs,.chips')){ uxTouchX=null; return; }
-  const t=e.touches[0]; uxTouchX=t.clientX; uxTouchY=t.clientY; uxTouchT=Date.now();
+  if(document.querySelector('.modal.open') || uxSlide){ uxX=null; return; }
+  if(e.target.closest('input,textarea,select,.bottom-nav,.top-tabs,.chips,.seg')){ uxX=null; return; }
+  const t=e.touches[0]; uxX=t.clientX; uxY=t.clientY;
 },{passive:true});
-document.addEventListener('touchend', e=>{
-  if(uxTouchX===null) return;
-  const t=e.changedTouches[0];
-  const dx=t.clientX-uxTouchX, dy=t.clientY-uxTouchY;
-  const order=['recipes','fridge','shopping','eats','settings'];
-  if(Date.now()-uxTouchT<650 && Math.abs(dx)>72 && Math.abs(dx)>Math.abs(dy)*1.8 && !document.querySelector('.modal.open')){
-    const i=order.indexOf(ui.tab);
-    const j=Math.min(order.length-1, Math.max(0, i+(dx<0?1:-1)));
-    if(j!==i) setTab(order[j]);
+document.addEventListener('touchmove', e=>{
+  if(uxX===null) return;
+  const t=e.touches[0]; const dx=t.clientX-uxX, dy=t.clientY-uxY;
+  if(uxSlide){ if(Math.abs(dy)>Math.abs(dx)*1.4 && Math.abs(dy)>60) uxSlideEnd(false); else uxSlideMove(dx); return; }
+  if(Math.abs(dx)>24 && Math.abs(dx)>Math.abs(dy)*1.6){
+    if(document.querySelector('.modal.open')){ uxX=null; return; }
+    if(uxSlideBegin(dx<0?-1:1)) uxSlideMove(dx); else uxX=null;
   }
-  uxTouchX=null;
 },{passive:true});
+function uxFinish(e){
+  if(uxX===null) return;
+  const t=e.changedTouches[0]; const dx=t.clientX-uxX;
+  if(uxSlide) uxSlideEnd(Math.abs(dx)>Math.max(90, window.innerWidth*0.16));
+  uxX=null;
+}
+document.addEventListener('touchend', uxFinish, {passive:true});
+document.addEventListener('touchcancel', ()=>{ if(uxSlide) uxSlideEnd(false); uxX=null; });
 document.addEventListener('keydown', e=>{
   if(e.key==='Enter' && document.querySelector('#mConfirm').classList.contains('open')){
     const btns=[...document.querySelectorAll('#confirmBody .btn')];
-    if(btns.length){ btns[btns.length-1].click(); }
+    if(btns.length) btns[btns.length-1].click();
   }
 });
 
