@@ -2435,7 +2435,8 @@ async function runOcr(){
     const { data } = await ocrWorker.recognize(ui.ocr.image);
     const text=((data&&data.text)||'').trim();
     if(!text && !(data&&data.lines&&data.lines.length)) throw new Error('empty');
-    const draft=parseOcrLayout(data, text);
+    let draft;
+    try{ draft=parseOcrLayout(data, text); }catch(err){ draft=parseRecipeText(text); }
     if(!draft.steps.length && !draft.ingredients.length){
       const again=parseRecipeText(text);
       if(again.steps.length || again.ingredients.length) Object.assign(draft, again);
