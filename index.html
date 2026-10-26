@@ -9,7 +9,9 @@
 <meta name="apple-mobile-web-app-title" content="食谱小本">
 <meta name="theme-color" content="#6f8457">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>食谱小本 🍳 — 食谱 & 购物清单</title>
 <style>
@@ -2429,23 +2431,156 @@ async function runOcr(){
       });
     }
     ui.ocr.statusText='识别文字中…';
+    await ocrWorker.setParameters({ preserve_interword_spaces: '1' });
     const { data } = await ocrWorker.recognize(ui.ocr.image);
     const text=((data&&data.text)||'').trim();
-    if(!text) throw new Error('empty');
-    const draft=parseRecipeText(text);
+    if(!text && !(data&&data.lines&&data.lines.length)) throw new Error('empty');
+    const draft=parseOcrLayout(data, text);
+    if(!draft.steps.length && !draft.ingredients.length){
+      const again=parseRecipeText(text);
+      if(again.steps.length || again.ingredients.length) Object.assign(draft, again);
+    }
     draft.image = await compressDataURL(ui.ocr.image, 900, 0.8);
     ui.ocr.busy=false;
     close('mOcr');
     openForm(null, draft);
-    toast('识别完成，请核对后保存 ✏️');
+    if(!String(draft.name||'').trim()){
+      setTimeout(()=>{ const el=$('#f-name'); if(el){ el.placeholder='图片里没认出菜名，补一个吧'; el.focus(); } }, 320);
+      toast('已识别，菜名请手动补一下 ✏️');
+    }else{
+      toast('识别完成，请核对后保存 ✏️');
+    }
   }catch(e){
     ui.ocr.busy=false;
     ui.ocr.error = (e&&e.message==='empty')
       ? '没有识别出文字，换一张更清晰、文字更大的图片试试。'
-      : '识别引擎加载失败。首次使用需要联网（下载约 5MB 引擎），且通过 http:// 方式打开本页（如 node server-test.js 或托管到网上），直接双击 file:// 打开时浏览器限制无法加载。';
+      : `识别失败：${(e&&e.message)||'未知错误'}。若是第一次使用，需要联网下载约 5MB 识别引擎，并通过 http(s):// 打开本页（直接双击 file:// 会被浏览器限制）。`;
     renderOcr();
   }
 }
+/* 把 OCR 结果（带行/词坐标）重建成草稿：能处理多栏排版的美食卡片，也会退回纯文本解析 */
+const OCR_NOISE = /豆包|即梦|AI\s*生成|小红书|下厨房|美食杰|香哈|懒饭|日食记|Copyright|©/i;
+const ocrBare = s => s.replace(/\s+/g, '');
+const ocrCjk = s => (s.match(/[\u4e00-\u9fa5]/g) || []).length;
+const ocrStripNum = s => s.replace(/^[（(]?\s*\d{1,2}\s*[.、)）:：]?\s*/, '').replace(/^[①②③④⑤⑥⑦⑧⑨⑩⑪⑫]\s*/, '').trim();
+const CJK_RE = /[\u4e00-\u9fa5]/;
+const joinWords = ws => ws.reduce((acc, w) => {
+  if (!acc) return w.t;
+  const prev = acc[acc.length - 1], next = w.t[0];
+  return acc + ((CJK_RE.test(prev) || CJK_RE.test(next)) ? '' : ' ') + w.t;
+}, '');
+
+function ocrCollect(data) {
+  const lines = (data && Array.isArray(data.lines) ? data.lines : []).map(l => ({
+    t: (l.text || '').replace(/\n/g, ' ').trim(), conf: Math.round(l.confidence || 0), bbox: l.bbox || null,
+  })).filter(l => l.t && l.bbox);
+  const keepLine = l => ocrBare(l.t).length >= 3 && !OCR_NOISE.test(l.t) && ocrCjk(l.t) >= 2;
+  let keep = lines.filter(l => keepLine(l) && l.conf >= 40 && ocrCjk(l.t) / ocrBare(l.t).length >= 0.45);
+  if (keep.length < 3) keep = lines.filter(keepLine);
+  const y0 = Math.min(...keep.map(l => l.bbox.y0)), y1 = Math.max(...keep.map(l => l.bbox.y1));
+  const words = (data && Array.isArray(data.words) ? data.words : []).map(w => ({
+    t: (w.text || '').trim(), conf: Math.round(w.confidence || 0), b: w.bbox || null,
+  })).filter(w => w.t && w.b && w.conf >= 30 && (/\S/.test(w.t))
+    && (ocrCjk(w.t) >= 1 || /[0-9]/.test(w.t) || /[\u3000-\u303f\uff01-\uff65]/.test(w.t))
+    && ((w.b.y0 + w.b.y1) / 2) >= y0 - 4 && ((w.b.y0 + w.b.y1) / 2) <= y1 + 4);
+  return { lines: keep, words };
+}
+/* 用「整列都没有字」的竖向空白间隙切出分栏 */
+function ocrColumns(lines, words) {
+  const minX = Math.min(...lines.map(l => l.bbox.x0));
+  const maxX = Math.max(...lines.map(l => l.bbox.x1));
+  const W = Math.max(1, Math.round(maxX - minX));
+  const cover = new Int32Array(W + 1);
+  words.forEach(w => {
+    const a = Math.max(0, Math.round(w.b.x0 - minX)), b = Math.min(W, Math.round(w.b.x1 - minX));
+    for (let x = a; x <= b; x++) cover[x]++;
+  });
+  const gutters = [];
+  let runStart = -1;
+  for (let x = 0; x <= W; x++) {
+    if (cover[x] === 0) { if (runStart < 0) runStart = x; }
+    else if (runStart >= 0) { gutters.push([runStart, x - 1]); runStart = -1; }
+  }
+  if (runStart >= 0) gutters.push([runStart, W]);
+  const minGap = Math.max(10, W * 0.015), edge = W * 0.03;
+  const inner = gutters.filter(([a, b]) => b - a >= minGap && a > edge && b < W - edge);
+  if (!inner.length) return [];
+  const cols = [];
+  let start = 0;
+  inner.forEach(([a, b]) => { cols.push([start, a]); start = b; });
+  cols.push([start, W]);
+  return cols.map(([a, b]) => ({ x0: a + minX, x1: b + minX })).filter(c => c.x1 - c.x0 > W * 0.1);
+}
+function parseOcrLayout(data, text) {
+  const raw = (text || (data && data.text) || '').replace(/\r/g, '');
+  const { lines, words } = ocrCollect(data);
+  const fallback = () => {
+    const draft = parseRecipeText(lines.length ? lines.map(l => l.t).join('\n') : raw);
+    if (!draft.steps.length && !draft.ingredients.length && lines.length) return parseRecipeText(raw);
+    return draft;
+  };
+  const linear = fallback();
+  if (lines.length < 4 || words.length < 12) return linear;
+
+  const cols = ocrColumns(lines, words);
+  if (cols.length < 2) return linear;
+
+  /* 把所有词按分栏归类 */
+  const byCol = cols.map(() => []);
+  words.forEach(w => {
+    const cx = (w.b.x0 + w.b.x1) / 2;
+    const i = cols.findIndex(c => cx >= c.x0 - 2 && cx <= c.x1 + 2);
+    if (i >= 0) byCol[i].push(w);
+  });
+  byCol.forEach(list => list.sort((a, b) => (a.b.y0 - b.b.y0) || (a.b.x0 - b.b.x0)));
+
+  /* 每个分栏内部，按行间大空隙切成「步骤块」 */
+  const blockOf = list => {
+    const out = [];
+    let cur = [];
+    list.forEach(w => {
+      if (cur.length) {
+        const prev = cur[cur.length - 1];
+        const h = Math.max(1, prev.b.y1 - prev.b.y0);
+        if (w.b.y0 - prev.b.y1 > h * 1.6) { out.push(cur); cur = []; }
+      }
+      cur.push(w);
+    });
+    if (cur.length) out.push(cur);
+    return out;
+  };
+
+  const laneBlocks = byCol.map(blockOf);
+  const maxBlocks = Math.max(...laneBlocks.map(b => b.length));
+  const steps = [];
+  for (let bi = 0; bi < maxBlocks; bi++) {
+    for (let ci = 0; ci < laneBlocks.length; ci++) {
+      const block = laneBlocks[ci][bi];
+      if (!block || block.length < 1) continue;
+      const rows = [];
+      block.forEach(w => {
+        const r = rows.find(row => Math.abs(row.y - (w.b.y0 + w.b.y1) / 2) < Math.max(8, (w.b.y1 - w.b.y0) * 0.8));
+        if (r) r.ws.push(w); else rows.push({ y: (w.b.y0 + w.b.y1) / 2, ws: [w] });
+      });
+      rows.sort((a, b) => a.y - b.y);
+      const parts = rows.map(r => joinWords(r.ws.sort((a, b) => a.b.x0 - b.b.x0))).filter(Boolean);
+      if (!parts.length) continue;
+      while (parts.length > 1 && ocrBare(parts[0]).length <= 1) parts.shift();
+      let title = '', rest = parts;
+      if (parts.length > 1 && parts[0].length <= 14 && !/[。！？!?]$/.test(parts[0])) { title = parts[0]; rest = parts.slice(1); }
+      const head = ocrStripNum(title), body = ocrStripNum(rest.join(''));
+      if (ocrBare(head + body).length < 4) continue;
+      steps.push(head ? `${head}：${body}` : body);
+    }
+  }
+  if (steps.length < 2) return linear;
+  if (linear.name && linear.ingredients.length >= 1 && linear.steps.length >= 2) return linear;
+  return {
+    name: '', category: '', time: null, servings: null, cal: null,
+    ingredients: [], steps: steps.slice(0, 25), tagsStr: '', notes: '', image: null,
+  };
+}
+
 /* 把识别出的中文菜谱文本解析成结构化草稿（尽力而为，用户可在表单中修正） */
 function parseRecipeText(text){
   const toNum=v=>{ const n=parseFloat(v); return isFinite(n)?n:null; };

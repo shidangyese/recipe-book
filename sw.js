@@ -1,6 +1,6 @@
 /* 食谱小本 Service Worker：网络优先、离线兜底（仅缓存本站静态资源，不碰 /api 与 CDN） */
-const CACHE = 'recipe-book-v1';
-const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+const CACHE = 'recipe-book-v2';
+const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png', './favicon.png'];
 
 self.addEventListener('install', e => {
   self.skipWaiting();
