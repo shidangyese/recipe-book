@@ -1,0 +1,2943 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="食谱小本">
+<meta name="theme-color" content="#6f8457">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>食谱小本 🍳 — 食谱 & 购物清单</title>
+<style>
+/* ========== 1. 主题变量 ========== */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f4f2e9; --bg-glass:rgba(244,242,233,.88);
+  --card:#fffefa; --chip:#ebe7d9; --line:#e0dbc9;
+  --text:#3c4237; --muted:#94988a;
+  --accent:#6f8457; --accent-soft:#e7ecdc;
+  --danger:#c25b4e; --ok:#7f9c5a;
+  --warn:#d98b3f;
+  --glass:rgba(255,254,250,.85);
+  --shadow:0 2px 5px rgba(105,110,88,.08),0 8px 20px rgba(105,110,88,.06);
+}
+:root[data-theme="dark"]{
+  --bg:#171a14; --bg-glass:rgba(23,26,20,.88);
+  --card:#22261c; --chip:#2d3225; --line:#383e2e;
+  --text:#eceadf; --muted:#9aa28e;
+  --accent:#a3b987; --accent-soft:#2c3524;
+  --danger:#e06a5c; --ok:#8fb372;
+  --warn:#e0a35f;
+  --glass:rgba(34,38,28,.85);
+  --shadow:0 2px 5px rgba(0,0,0,.35),0 8px 20px rgba(0,0,0,.28);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]):not([data-theme="dark"]){
+    --bg:#171a14; --bg-glass:rgba(23,26,20,.88);
+    --card:#22261c; --chip:#2d3225; --line:#383e2e;
+    --text:#eceadf; --muted:#9aa28e;
+    --accent:#a3b987; --accent-soft:#2c3524;
+    --danger:#e06a5c; --ok:#8fb372;
+    --warn:#e0a35f;
+    --glass:rgba(34,38,28,.85);
+    --shadow:0 2px 5px rgba(0,0,0,.35),0 8px 20px rgba(0,0,0,.28);
+  }
+}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  background:var(--bg); color:var(--text); font-size:15px; line-height:1.5;
+  padding-bottom:calc(70px + env(safe-area-inset-bottom));
+}
+button{font-family:inherit;cursor:pointer;color:inherit}
+input,textarea,select{font-family:inherit;font-size:15px;color:var(--text)}
+img{display:block}
+
+/* ========== 2. 通用组件 ========== */
+.input{
+  width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:10px 12px;outline:none;transition:border .15s, box-shadow .15s;
+}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+textarea.input{resize:vertical;line-height:1.5}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  background:var(--accent);color:#fff;border:0;border-radius:10px;
+  padding:10px 16px;font-size:15px;font-weight:600;transition:filter .15s, transform .1s;
+}
+.btn:active{transform:scale(.97)}
+.btn:hover{filter:brightness(1.06)}
+.btn.ghost{background:var(--chip);color:var(--text);font-weight:500}
+.btn.ghost:hover{filter:none;background:var(--line)}
+.btn.danger{background:var(--danger);color:#fff}
+.btn.danger-ghost{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:8px}
+.icon-btn{
+  width:34px;height:34px;flex:none;display:inline-flex;align-items:center;justify-content:center;
+  background:var(--chip);border:0;border-radius:50%;font-size:14px;color:var(--muted);
+}
+.icon-btn:hover{background:var(--line)}
+.chip{
+  flex:none;background:var(--chip);border:0;border-radius:999px;padding:7px 14px;
+  font-size:13px;color:var(--muted);transition:.15s;white-space:nowrap;
+}
+.chip.on{background:var(--accent);color:#fff;font-weight:600}
+.chip.sm{padding:3px 10px;font-size:12px}
+input[type="checkbox"]{width:18px;height:18px;accent-color:var(--accent);flex:none;cursor:pointer}
+
+/* ========== 3. 顶栏 & 底部导航 ========== */
+.topbar{
+  position:sticky;top:0;z-index:30;background:var(--bg-glass);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.topbar-inner{
+  max-width:960px;margin:0 auto;padding:12px 16px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.topbar h1{font-size:18px;font-weight:700}
+.top-tabs{display:none;gap:4px}
+.top-tabs button{
+  border:0;background:none;padding:7px 16px;border-radius:999px;
+  font-size:14px;color:var(--muted);font-weight:500;
+}
+.top-tabs button.on{background:var(--accent);color:#fff;font-weight:600}
+.bottom-nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;
+  background:var(--card);border-top:1px solid var(--line);
+  padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+}
+.bottom-nav button{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  background:none;border:0;font-size:11px;color:var(--muted);padding:4px 0;
+}
+.bottom-nav button .ico{font-size:21px;line-height:1}
+.bottom-nav button.on{color:var(--accent);font-weight:600}
+
+/* ========== 4. 主体布局 ========== */
+main{max-width:960px;margin:0 auto;padding:14px 16px}
+.view{display:none}
+.view.active{display:block}
+.sec-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 2px 12px}
+.sec-head h2{font-size:16px}
+.sec-head .muted{font-size:13px;color:var(--muted)}
+.muted{color:var(--muted)}
+.search-row{display:flex;gap:8px;margin-bottom:10px}
+.search-row .input{flex:1}
+.seg{display:flex;background:var(--chip);border-radius:12px;padding:3px;margin-bottom:10px}
+.seg button{flex:1;border:0;background:none;padding:8px;border-radius:10px;font-size:14px;color:var(--muted);font-weight:600}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:var(--shadow)}
+.btn.ghost.on{background:var(--accent);color:#fff}
+.libtag{
+  position:absolute;top:8px;left:8px;background:var(--glass);backdrop-filter:blur(4px);
+  font-size:11px;padding:3px 8px;border-radius:999px;color:var(--muted);
+}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+
+/* FAB */
+#fab{
+  position:fixed;right:18px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:35;
+  width:56px;height:56px;border-radius:50%;border:0;background:var(--accent);color:#fff;
+  font-size:30px;line-height:1;box-shadow:0 6px 18px rgba(224,106,59,.4);
+  display:none;align-items:center;justify-content:center;transition:transform .15s;
+}
+#fab:active{transform:scale(.92)}
+body[data-tab="recipes"] #fab{display:flex}
+body[data-lib="1"] #fab{display:none!important}
+
+/* ========== 5. 食谱卡片 ========== */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.rcard{
+  background:var(--card);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);
+  position:relative;cursor:pointer;transition:transform .15s;
+}
+.rcard:active{transform:scale(.97)}
+.thumb{aspect-ratio:4/3;background:var(--chip);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.ph{font-size:42px}
+.rc-body{padding:10px 12px 12px}
+.rc-name{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rc-meta{font-size:12px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rcard .fav{
+  position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;
+  border:0;background:var(--glass);backdrop-filter:blur(4px);font-size:17px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+}
+.empty{text-align:center;padding:52px 20px;color:var(--muted)}
+.empty .big{font-size:52px;margin-bottom:10px}
+.empty p{font-size:14px}
+
+/* ========== 6. 购物清单 ========== */
+.shop-input{display:flex;gap:8px;margin-bottom:10px}
+.shop-input .input[name="n"]{flex:1.6}
+.shop-input .input[name="a"]{flex:1}
+.shop-tools{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.shop-group{margin-bottom:16px}
+.shop-group h3{font-size:13px;color:var(--muted);font-weight:600;margin:0 2px 8px}
+.shop-item{
+  display:flex;align-items:center;gap:10px;background:var(--card);
+  border-radius:12px;padding:11px 12px;margin-bottom:8px;box-shadow:var(--shadow);
+}
+.si-main{flex:1;min-width:0;font-size:15px}
+.si-main em{font-style:normal;color:var(--muted);font-size:13px;margin-left:6px}
+.si-main .src{display:block;font-style:normal;font-size:11px;color:var(--muted);margin-top:1px}
+.shop-item.done .si-main span{text-decoration:line-through;color:var(--muted)}
+.shop-item .del{width:28px;height:28px;font-size:12px}
+
+/* ========== 7. 设置页 ========== */
+.set-card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.set-card h3{font-size:15px;margin-bottom:10px}
+.set-card p{font-size:13px;color:var(--muted);margin-bottom:8px}
+.set-row{display:flex;gap:8px;flex-wrap:wrap}
+.set-row .btn{flex:1;min-width:120px}
+details{border-top:1px solid var(--line);padding:10px 0}
+details summary{font-size:14px;cursor:pointer;font-weight:500}
+details p{font-size:13px;color:var(--muted);margin:8px 0 0}
+select.input{appearance:auto}
+
+/* ========== 8. 弹窗 ========== */
+.modal{position:fixed;inset:0;z-index:50;display:none}
+.modal.open{display:block}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.mask{position:absolute;inset:0;background:rgba(0,0,0,.45);animation:fade .2s}
+.sheet{
+  position:absolute;left:0;right:0;bottom:0;background:var(--card);
+  border-radius:20px 20px 0 0;max-height:92vh;max-height:92dvh;
+  display:flex;flex-direction:column;animation:fade .18s ease;
+}
+.sheet-head{
+  flex:none;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;border-bottom:1px solid var(--line);
+}
+.sheet-head h2{font-size:16px}
+.sheet-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 18px 24px}
+.sheet-foot{
+  flex:none;display:flex;gap:10px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--line);
+}
+.sheet-foot .btn{flex:1}
+.sheet.narrow{border-radius:20px 20px 0 0}
+
+@media (min-width:720px){
+  .bottom-nav{display:none}
+  .top-tabs{display:flex}
+  body{padding-bottom:32px}
+  body[data-tab="recipes"] #fab{bottom:32px}
+  main{padding:20px 16px 40px}
+  .sheet{
+    left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);
+    width:min(620px,92vw);max-height:88vh;border-radius:20px;animation:fade .18s ease;
+  }
+  .sheet.narrow{width:min(430px,92vw)}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}}
+
+/* ========== 9. 详情页 ========== */
+.d-img{width:calc(100% + 36px);margin:-16px -18px 14px;aspect-ratio:16/10;object-fit:cover}
+.d-banner{
+  width:calc(100% + 36px);margin:-16px -18px 14px;aspect-ratio:16/8;
+  background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:56px;
+}
+.d-head h2{font-size:20px;margin-bottom:8px}
+.d-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.d-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.d-actions .btn{flex:1;min-width:calc(50% - 4px);padding:9px 10px;font-size:14px}
+.d-body h3{font-size:15px;margin:18px 0 8px}
+.d-body h3 .hint{font-size:12px;color:var(--muted);font-weight:400}
+.ing-check{list-style:none}
+.ing-check li{border-bottom:1px dashed var(--line)}
+.ing-check label{display:flex;align-items:center;gap:10px;padding:9px 2px;cursor:pointer}
+.ing-check em{font-style:normal;color:var(--muted);font-size:13px}
+.ing-check li input:checked + span{text-decoration:line-through;color:var(--muted)}
+.steps{padding-left:22px;display:flex;flex-direction:column;gap:10px}
+.steps li{font-size:14px}
+.steps li::marker{color:var(--accent);font-weight:700}
+.notes{background:var(--accent-soft);border-radius:12px;padding:12px;font-size:14px}
+/* 烹饪记录 */
+.cook-item{position:relative;background:var(--chip);border-radius:14px;padding:12px 14px;margin:10px 0;cursor:pointer}
+.cook-item:active{transform:scale(.99)}
+.ci-head{display:flex;justify-content:space-between;align-items:center;font-size:14px;padding-right:20px}
+.ci-stars{color:#d9a441;letter-spacing:2px;font-size:15px}
+.ci-stars .dim{opacity:.35}
+.ci-photo{width:100%;max-height:190px;object-fit:cover;border-radius:10px;margin-top:8px}
+.ci-note{font-size:13px;margin-top:8px}
+.ci-del{position:absolute;top:8px;right:8px;background:none;border:0;color:var(--muted);font-size:12px;padding:4px}
+.ci-del:hover{color:var(--danger)}
+/* 星级输入 */
+.stars{display:flex;gap:4px;margin-top:4px}
+.star-btn{background:none;border:0;font-size:28px;line-height:1;color:var(--chip);padding:0 2px}
+.star-btn.on{color:#d9a441}
+/* 探店卡片 */
+.eat-card{position:relative;background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:14px 16px;margin-bottom:12px;cursor:pointer}
+.eat-card:active{transform:scale(.99)}
+.eci-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.eci-head b{font-size:16px}
+.eci-meta{font-size:13px;color:var(--muted);margin-top:4px}
+.eci-note{font-size:13px;margin-top:8px}
+.tagline{display:flex;gap:6px;flex-wrap:wrap;margin-top:16px}
+
+/* ========== 10. 表单 ========== */
+.f-label{display:block;font-size:13px;font-weight:600;margin:16px 0 6px}
+.f-label:first-child{margin-top:0}
+.f-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ing-row{display:flex;gap:6px;margin-bottom:8px;align-items:center}
+.ing-row .input:nth-child(1){flex:1.5}
+.ing-row .input:nth-child(2){flex:1}
+.ing-row .input:nth-child(3){flex:.75}
+.step-row{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start}
+.step-num{
+  flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent-soft);
+  color:var(--accent);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:6px;
+}
+.step-row textarea{flex:1;min-height:44px}
+.step-btns{display:flex;flex-direction:column;gap:4px}
+.step-btns .icon-btn{width:28px;height:24px;border-radius:6px;font-size:11px}
+.img-pick{display:flex;align-items:center;gap:14px}
+#imgPreview{width:110px;height:82px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+.img-empty{
+  width:110px;height:82px;border:1px dashed var(--line);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);text-align:center;
+}
+.img-btns{display:flex;flex-direction:column;gap:8px}
+.file-btn{position:relative;overflow:hidden}
+.form-body .btn.sm{margin-top:2px}
+
+/* 随机推荐 */
+.rand-card{text-align:center;padding:16px 0}
+.rand-card .big{font-size:60px;margin-bottom:8px}
+.rand-card h2{font-size:20px;margin-bottom:6px}
+.rand-card .muted{font-size:13px}
+.rand-btns{display:flex;gap:10px;margin-top:18px}
+.rand-btns .btn{flex:1}
+
+/* 导出预览 */
+.export-preview{
+  white-space:pre-wrap;font-family:inherit;background:var(--chip);border-radius:12px;
+  padding:12px 14px;font-size:13px;line-height:1.7;max-height:38vh;overflow:auto;
+}
+
+/* 确认框 */
+.c-msg{font-size:14px;padding:2px 0 4px}
+.c-btns{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.c-btns .btn{flex:1;min-width:100px}
+
+/* 图片识别 */
+.ocr-preview{
+  aspect-ratio:4/3;background:var(--chip);border-radius:12px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;text-align:center;
+}
+.ocr-preview img{width:100%;height:100%;object-fit:contain}
+.ocr-bar{height:8px;background:var(--chip);border-radius:99px;overflow:hidden}
+.ocr-bar-fill{height:100%;width:0;background:var(--accent);transition:width .3s}
+
+/* 问候语头部 + 灵感卡 */
+.hero{padding:8px 2px 4px}
+.hero-top{display:flex;justify-content:space-between;align-items:center}
+.hero-app{font-size:12px;color:var(--muted);letter-spacing:1px}
+.hero-gear{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:16px}
+.hero-hi{font-size:26px;font-weight:800;margin-top:10px;letter-spacing:1px}
+.hero-sub{font-size:13px;color:var(--muted);margin-top:2px}
+.inspire{
+  background:var(--card);border-radius:22px;box-shadow:var(--shadow);
+  padding:20px 16px 16px;margin:16px 0 14px;text-align:center;
+}
+.inspire-pill{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:600}
+.inspire-emoji{font-size:38px;margin-top:12px;letter-spacing:8px}
+.inspire-names{font-size:19px;font-weight:800;line-height:1.55;margin-top:8px}
+.inspire-dish{background:none;border:0;font:inherit;color:var(--text);cursor:pointer;padding:0}
+.inspire-dish:hover{color:var(--accent);text-decoration:underline}
+.inspire-sep{color:var(--muted);margin:0 6px;font-weight:400}
+.inspire-sub{font-size:12px;color:var(--muted);margin-top:6px}
+.inspire-time{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:12px;color:var(--muted);margin-top:12px}
+.inspire-btns{display:flex;gap:10px;margin-top:14px}
+.inspire-btns .btn{flex:1}
+.fridge-hint{display:block;width:100%;background:none;border:0;color:var(--muted);font-size:13px;padding:4px 2px 12px;text-align:left;cursor:pointer}
+@media(max-width:719px){.topbar{display:none}}
+
+/* 冰箱卡片（手绘风） */
+.fridge-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.fcard{
+  position:relative;background:var(--card);border-radius:18px;box-shadow:var(--shadow);
+  padding:18px 10px 14px;text-align:center;cursor:pointer;transition:transform .15s;
+}
+.fcard:active{transform:scale(.96)}
+.fcard .del{
+  position:absolute;top:8px;right:8px;width:24px;height:24px;border:0;border-radius:50%;
+  background:transparent;color:var(--muted);font-size:13px;line-height:1;
+}
+.fcard .del:hover{color:var(--danger)}
+.fcard .pic{font-size:40px;line-height:1.2}
+.fcard .name{
+  display:inline-block;font-size:15px;font-weight:700;
+  border-bottom:2px solid var(--line);padding:0 4px 2px;margin-top:6px;
+}
+.fcard .amt{font-size:13px;margin-top:6px;color:var(--text)}
+.fcard .bought{font-size:12px;color:var(--muted);margin-top:4px}
+.fcard .exp{font-size:12px;margin-top:2px;font-weight:600}
+.exp-danger{color:var(--danger)}
+.exp-warn{color:var(--warn)}
+.exp-fresh{color:var(--ok)}
+.exp-mute{color:var(--muted);font-weight:400}
+.group-head{display:flex;align-items:center;gap:8px;margin:18px 2px 10px;font-size:14px;font-weight:700}
+.group-head .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.group-head .cnt{color:var(--muted);font-weight:500;font-size:13px}
+@media (min-width:720px){.fridge-grid{grid-template-columns:repeat(4,1fr)}}
+
+/* Toast */
+.toast{
+  position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));z-index:99;
+  transform:translateX(-50%) translateY(14px);background:#332b25;color:#fff;
+  padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;
+  transition:.25s;max-width:86vw;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.25);
+}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.toast.err{background:var(--danger)}
+</style>
+</head>
+<body data-tab="recipes">
+
+<!-- ===== 顶栏 ===== -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <h1>🍳 食谱小本</h1>
+    <nav class="top-tabs">
+      <button data-tab="recipes" class="on">食谱</button>
+      <button data-tab="fridge">冰箱</button>
+      <button data-tab="shopping">购物</button>
+      <button data-tab="eats">探店</button>
+      <button data-tab="settings">设置</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ===== 食谱页 ===== -->
+  <section id="view-recipes" class="view active">
+    <div class="hero">
+      <div class="hero-top">
+        <span class="hero-app">🍳 食谱小本 · 手账</span>
+        <button class="hero-gear" data-action="hero-settings" aria-label="设置">⚙️</button>
+      </div>
+      <h2 class="hero-hi" id="heroGreeting"></h2>
+      <p class="hero-sub" id="heroSub"></p>
+    </div>
+    <div class="inspire" id="inspireCard"></div>
+    <button class="fridge-hint" id="fridgeHintLine" data-action="fridge-rec"></button>
+    <div class="seg">
+      <button data-action="lib-mode" data-m="mine" class="on">我的食谱</button>
+      <button data-action="lib-mode" data-m="lib">📚 菜谱库</button>
+    </div>
+    <div class="search-row">
+      <input id="searchInput" class="input" placeholder="🔍 搜名称、食材、标签；或输入冰箱里的食材找菜谱">
+      <button class="btn ghost" id="btnFridgeRec" data-action="fridge-rec" title="按冰箱里的食材推荐" aria-label="按冰箱推荐" style="flex:none;width:48px;padding:0;font-size:19px">🧊</button>
+    </div>
+    <div class="chips" id="chipsBar"></div>
+    <div class="sec-head">
+      <h2><span id="libLabel">我的食谱</span> <span class="muted" id="recipeCount"></span></h2>
+      <div style="display:flex;gap:8px;flex:none">
+        <button class="btn ghost sm" data-action="open-import">📥 导入菜谱</button>
+      </div>
+    </div>
+    <div class="grid" id="recipeGrid"></div>
+  </section>
+
+  <!-- ===== 冰箱页 ===== -->
+  <section id="view-fridge" class="view">
+    <div class="sec-head">
+      <h2>🧊 我的冰箱 <span class="muted" id="fridgeCount"></span></h2>
+    </div>
+    <div class="shop-input">
+      <input id="fridgeName" class="input" name="n" placeholder="买了啥？如：鸡蛋">
+      <input id="fridgeAmt" class="input" name="a" placeholder="数量（可选）">
+      <button class="btn" data-action="fridge-add">存入</button>
+    </div>
+    <p id="fridgeHint" class="muted" style="font-size:12px;margin:-2px 2px 8px"></p>
+    <div class="chips" id="fridgeQuick"></div>
+    <div id="fridgeGroups"></div>
+    <div style="margin-top:18px">
+      <button class="btn" data-action="fridge-rec" style="width:100%;padding:14px;font-size:16px">🧊 按现有食材，推荐能做的菜</button>
+      <button class="btn ghost" data-action="open-cook" style="width:100%;padding:14px;font-size:16px;margin-top:10px">🍳 开始做饭 · 对照冰箱缺什么</button>
+      <p class="muted" style="font-size:12px;margin-top:8px;text-align:center">推荐按缺得最少的排前面 · 点食材卡片可改数量和保鲜天数</p>
+    </div>
+  </section>
+
+  <!-- ===== 购物清单页 ===== -->
+  <section id="view-shopping" class="view">
+    <div class="sec-head">
+      <h2>购物清单 <span class="muted" id="shopCount"></span></h2>
+    </div>
+    <div class="shop-input">
+      <input id="shopName" class="input" name="n" placeholder="添加要买的东西，如：鸡蛋">
+      <input id="shopAmt" class="input" name="a" placeholder="数量（可选）">
+      <button class="btn" data-action="shop-add">加入</button>
+    </div>
+    <div class="shop-tools">
+      <button class="btn ghost sm" data-action="open-pick">🍲 从食谱添加食材</button>
+      <button class="btn ghost sm" data-action="shop-copy">📋 复制清单</button>
+      <button class="btn ghost sm" data-action="open-shop-export">⬇️ 导出</button>
+      <button class="btn ghost sm" data-action="shop-clear-done">清除已买</button>
+    </div>
+    <div class="shop-group">
+      <h3>待买</h3>
+      <div id="shopPending"></div>
+    </div>
+    <div class="shop-group" id="doneGroup">
+      <h3>已买</h3>
+      <div id="shopDone"></div>
+    </div>
+  </section>
+
+  <!-- ===== 探店页 ===== -->
+  <section id="view-eats" class="view">
+    <div class="sec-head">
+      <h2>🍽️ 探店手记 <span class="muted" id="eatCount"></span></h2>
+      <button class="btn sm" data-action="eat-add">＋ 记一笔</button>
+    </div>
+    <div class="search-row" style="margin-bottom:12px">
+      <input id="eatSearch" class="input" placeholder="🔍 搜店名、菜品、感想…">
+    </div>
+    <div id="eatList"></div>
+  </section>
+
+  <!-- ===== 设置页 ===== -->
+  <section id="view-settings" class="view">
+    <div class="set-card">
+      <h3>📊 数据概览</h3>
+      <p id="statLine"></p>
+    </div>
+    <div class="set-card">
+      <h3>🌗 外观</h3>
+      <label class="f-label" style="margin-top:0">主题</label>
+      <select id="themeSelect" class="input">
+        <option value="auto">跟随系统</option>
+        <option value="light">浅色</option>
+        <option value="dark">深色</option>
+      </select>
+    </div>
+    <div class="set-card">
+      <h3>💾 备份与恢复</h3>
+      <p>数据保存在本设备的浏览器里。换手机、换浏览器前请先导出备份，再在新设备导入。</p>
+      <div class="set-row">
+        <button class="btn" data-action="export">⬇️ 导出备份</button>
+        <button class="btn ghost" data-action="import">⬆️ 导入备份</button>
+        <input type="file" id="fileImport" accept=".json,application/json" hidden>
+      </div>
+    </div>
+    <div class="set-card">
+      <h3>☁️ 同步与数据库</h3>
+      <p id="syncLine">⚪ 检查中…</p>
+      <div class="set-row">
+        <button class="btn ghost" data-action="sync-now">🔄 立即同步</button>
+      </div>
+      <details style="margin-top:10px">
+        <summary>这是什么数据库？多设备怎么同步？</summary>
+        <p>在电脑上运行 <b>node server.js</b>（保持窗口开着），应用会把你的食谱、购物清单、冰箱自动同步进同目录的 recipes.db（SQLite 数据库文件）。同一 WiFi 下的手机/电脑用浏览器访问时，读写的是同一个库，改一处处处生效。数据同时也留在每台设备本地，断网照常使用，恢复联网自动合并。</p>
+      </details>
+    </div>
+    <div class="set-card">
+      <h3>📚 示例数据</h3>
+      <p>还没东西的时候可以先放 4 道示例食谱看看效果。</p>
+      <div class="set-row">
+        <button class="btn ghost" data-action="seed">载入示例食谱</button>
+      </div>
+    </div>
+    <div class="set-card">
+      <h3>❓ 使用说明</h3>
+      <details open>
+        <summary>数据存在哪里？安全吗？</summary>
+        <p>所有数据只保存在你当前这台设备的当前浏览器里（localStorage），不会上传到任何服务器。清除浏览器数据会一并清掉，所以重要内容请定期「导出备份」。</p>
+      </details>
+      <details>
+        <summary>手机上怎么用？</summary>
+        <p>手机浏览器打开本页面即可，安卓可以把页面「添加到主屏幕」，体验接近原生 App。不同设备数据不互通，用「导出备份 / 导入备份」来同步。</p>
+      </details>
+      <details>
+        <summary>怎么把食谱的食材加进购物清单？</summary>
+        <p>打开任意一道食谱 → 点「🛒 食材加入购物清单」，会自动去重。也可以在购物清单页点「🍲 从食谱添加食材」，或用「🧊 开始做饭」只把冰箱里缺的加进去。</p>
+      </details>
+      <details>
+        <summary>冰箱页是干嘛的？</summary>
+        <p>把家里现有的食材存进去（支持下面的常备食材一键添加）。点「🍳 开始做饭」选一道菜，会自动对照冰箱：有的标记不用买，缺的可以一键加入购物清单。食谱详情页里也有「🧊 对照冰箱」按钮。</p>
+      </details>
+    </div>
+    <div class="set-card">
+      <h3>⚠️ 危险操作</h3>
+      <div class="set-row">
+        <button class="btn danger-ghost" data-action="wipe">清空所有数据</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== FAB ===== -->
+<button id="fab" data-action="new-recipe" aria-label="新建食谱">＋</button>
+
+<!-- ===== 底部导航 ===== -->
+<nav class="bottom-nav">
+  <button data-tab="recipes" class="on"><span class="ico">🍳</span>食谱</button>
+  <button data-tab="fridge"><span class="ico">🧊</span>冰箱</button>
+  <button data-tab="shopping"><span class="ico">🛒</span>购物</button>
+  <button data-tab="eats"><span class="ico">🍽️</span>探店</button>
+  <button data-tab="settings"><span class="ico">⚙️</span>设置</button>
+</nav>
+
+<!-- ===== 弹窗：食谱详情 ===== -->
+<div class="modal" id="mDetail">
+  <div class="mask" data-action="close" data-m="mDetail"></div>
+  <div class="sheet">
+    <div class="sheet-head"><h2>食谱详情</h2><button class="icon-btn" data-action="close" data-m="mDetail">✕</button></div>
+    <div class="sheet-body d-body" id="detailBody"></div>
+  </div>
+</div>
+
+<!-- ===== 弹窗：新建/编辑食谱 ===== -->
+<div class="modal" id="mForm">
+  <div class="mask"></div>
+  <div class="sheet">
+    <div class="sheet-head"><h2 id="formTitle">新建食谱</h2><button class="icon-btn" data-action="close" data-m="mForm">✕</button></div>
+    <div class="sheet-body form-body">
+      <label class="f-label">名称 *</label>
+      <input id="f-name" class="input" placeholder="比如：红烧排骨">
+      <div class="f-grid2">
+        <div><label class="f-label">分类</label><input id="f-cat" class="input" list="catList" placeholder="家常菜"></div>
+        <div><label class="f-label">用时(分钟)</label><input id="f-time" class="input" type="number" min="1" inputmode="numeric" placeholder="30"></div>
+        <div><label class="f-label">份量(人)</label><input id="f-serv" class="input" type="number" min="1" inputmode="numeric" placeholder="2"></div>
+        <div><label class="f-label">热量(千卡/份)</label><input id="f-cal" class="input" type="number" min="0" inputmode="numeric" placeholder="约350"></div>
+      </div>
+      <label class="f-label">食材</label>
+      <div id="ingList"></div>
+      <button class="btn ghost sm" type="button" data-action="ing-add">＋ 添加食材</button>
+      <label class="f-label">步骤</label>
+      <div id="stepList"></div>
+      <button class="btn ghost sm" type="button" data-action="step-add">＋ 添加步骤</button>
+      <label class="f-label">标签</label>
+      <input id="f-tags" class="input" placeholder="用空格或逗号分隔，如：快手 下饭">
+      <label class="f-label">小贴士</label>
+      <textarea id="f-notes" class="input" rows="2" placeholder="技巧、注意事项…"></textarea>
+      <label class="f-label">图片（可选，会自动压缩）</label>
+      <div class="img-pick">
+        <img id="imgPreview" hidden alt="食谱图片预览">
+        <div id="imgEmpty" class="img-empty">🖼<br>尚未选择</div>
+        <div class="img-btns">
+          <label class="btn ghost sm file-btn">📷 选择图片<input id="fileImg" type="file" accept="image/*" hidden></label>
+          <button class="btn danger-ghost sm" type="button" data-action="img-rm" id="btnImgRm" hidden>移除图片</button>
+        </div>
+      </div>
+      <datalist id="catList"></datalist>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn ghost" data-action="close" data-m="mForm">取消</button>
+      <button class="btn" data-action="save-recipe">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 弹窗：从食谱添加到购物清单 ===== -->
+<div class="modal" id="mPick">
+  <div class="mask" data-action="close" data-m="mPick"></div>
+  <div class="sheet">
+    <div class="sheet-head"><h2>选择食谱</h2><button class="icon-btn" data-action="close" data-m="mPick">✕</button></div>
+    <div class="sheet-body" id="pickList"></div>
+  </div>
+</div>
+
+<!-- ===== 弹窗：今天吃什么 ===== -->
+<div class="modal" id="mRandom">
+  <div class="mask" data-action="close" data-m="mRandom"></div>
+  <div class="sheet narrow">
+    <div class="sheet-head"><h2>🎲 今天吃什么</h2><button class="icon-btn" data-action="close" data-m="mRandom">✕</button></div>
+    <div class="sheet-body" id="randomBody"></div>
+  </div>
+</div>
+
+<!-- ===== 弹窗：确认框 ===== -->
+<div class="modal" id="mConfirm">
+  <div class="mask"></div>
+  <div class="sheet narrow">
+    <div class="sheet-head"><h2 id="confirmTitle">确认</h2></div>
+    <div class="sheet-body" id="confirmBody"></div>
+  </div>
+</div>
+
+<!-- ===== 弹窗：今晚这么吃 ===== -->
+<div class="modal" id="mCombo">
+  <div class="mask" data-action="close" data-m="mCombo"></div>
+  <div class="sheet narrow">
+    <div class="sheet-head"><h2>🍽️ 今晚这么吃</h2><button class="icon-btn" data-action="close" data-m="mCombo">✕</button></div>
+    <div class="sheet-body" id="comboBody"></div>
+    <div class="sheet-foot"><button class="btn" data-action="combo-shop">🛒 食材全部加入购物清单</button></div>
+  </div>
+</div>
+
+<!-- ===== 弹窗：烹饪记录 ===== -->
+<div class="modal" id="mCookLog">
+  <div class="mask" data-action="close" data-m="mCookLog"></div>
+  <div class="sheet narrow">
+    <div class="sheet-head"><h2 id="clTitle">添加烹饪记录</h2><button class="icon-btn" data-action="close" data-m="mCookLog">✕</button></div>
+    <div class="sheet-body">
+      <label class="f-label">日期</label>
+      <input id="cl-date" class="input" type="date">
+      <label class="f-label">这次打几分？</label>
+      <div class="stars" id="cl-stars"></div>
+      <label class="f-label">成品照片（可选）</label>
+      <div class="img-pick">
+        <img id="cl-photo" hidden alt="成品照片">
+        <div id="cl-photo-empty" class="img-empty">📷<br>还没放照片</div>
+        <div class="img-btns">
+          <label class="btn ghost sm file-btn">选择图片<input id="fileCookLogImg" type="file" accept="image/*" hidden></label>
+          <button class="btn danger-ghost sm" type="button" data-action="cl-photo-rm" id="cl-photo-rm" hidden>移除</button>
+        </div>
+      </div>
+      <label class="f-label">感想 · 下次怎么改进 · 好用的食材品牌</label>
+      <textarea id="cl-note" class="input" rows="4" placeholder="比如：盐可以减半；下次加点白芝麻；盒马的鸡块比肋排部位好…"></textarea>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn danger-ghost" data-action="cook-log-del" id="cl-del-btn" hidden>删除</button>
+      <button class="btn" data-action="cook-log-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 弹窗：探店记录 ===== -->
+<div class="modal" id="mEat">
+  <div class="mask" data-action="close" data-m="mEat"></div>
+  <div class="sheet narrow">
+    <div class="sheet-head"><h2 id="eatTitle">记一笔探店</h2><button class="icon-btn" data-action="close" data-m="mEat">✕</button></div>
+    <div class="sheet-body">
+      <label class="f-label">店名 *</label>
+      <input id="ea-name" class="input" placeholder="比如：巷子口的潮汕牛肉锅">
+      <label class="f-label">吃了什么 / 招牌菜</label>
+      <input id="ea-dish" class="input" placeholder="比如：吊龙、手打牛肉丸">
+      <div class="f-grid2">
+        <div><label class="f-label">人均（元）</label><input id="ea-price" class="input" type="number" min="0" inputmode="numeric" placeholder="80"></div>
+        <div><label class="f-label">日期</label><input id="ea-date" class="input" type="date"></div>
+      </div>
+      <label class="f-label">位置（可选）</label>
+      <input id="ea-loc" class="input" placeholder="比如：朝阳大悦城 5 层">
+      <label class="f-label">值不值得？</label>
+      <div class="stars" id="ea-stars"></div>
+      <label class="f-label">感想</label>
+      <textarea id="ea-note" class="input" rows="3" placeholder="比如：适合带朋友来，环境吵了点，牛肉丸必点"></textarea>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn danger-ghost" data-action="eat-del" id="ea-del-btn" hidden>删除</button>
+      <button class="btn" data-action="eat-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 弹窗：编辑冰箱食材 ===== -->
+<div class="modal" id="mFridgeEdit">
+  <div class="mask" data-action="close" data-m="mFridgeEdit"></div>
+  <div class="sheet narrow">
+    <div class="sheet-head"><h2>🧊 编辑食材</h2><button class="icon-btn" data-action="close" data-m="mFridgeEdit">✕</button></div>
+    <div class="sheet-body">
+      <label class="f-label">名称</label>
+      <input id="fe-name" class="input">
+      <label class="f-label">数量</label>
+      <input id="fe-amt" class="input" placeholder="如：1盒 / 300克">
+      <label class="f-label">购入日期</label>
+      <input id="fe-bought" class="input" type="date">
+      <label class="f-label">冷藏可放（天）</label>
+      <input id="fe-days" class="input" type="number" min="1" inputmode="numeric" placeholder="留空按常见时长自动估算">
+      <p class="muted" style="font-size:12px;margin-top:10px">保鲜时长是常见冷藏条件的估算值，仅供参考，请以食材实际状态为准。</p>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn danger-ghost" data-action="fridge-edit-del">移除</button>
+      <button class="btn" data-action="fridge-edit-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 弹窗：开始做饭（对照冰箱） ===== -->
+<div class="modal" id="mCook">
+  <div class="mask" data-action="close" data-m="mCook"></div>
+  <div class="sheet">
+    <div class="sheet-head"><h2>🍳 开始做饭</h2><button class="icon-btn" data-action="close" data-m="mCook">✕</button></div>
+    <div class="sheet-body" id="cookBody"></div>
+  </div>
+</div>
+
+<!-- ===== 弹窗：导出购物清单 ===== -->
+<div class="modal" id="mShopExport">
+  <div class="mask" data-action="close" data-m="mShopExport"></div>
+  <div class="sheet narrow">
+    <div class="sheet-head"><h2>⬇️ 导出购物清单</h2><button class="icon-btn" data-action="close" data-m="mShopExport">✕</button></div>
+    <div class="sheet-body" id="shopExportBody"></div>
+  </div>
+</div>
+
+<!-- ===== 弹窗：分享菜谱 ===== -->
+<div class="modal" id="mShare">
+  <div class="mask" data-action="close" data-m="mShare"></div>
+  <div class="sheet narrow">
+    <div class="sheet-head"><h2>📤 分享菜谱</h2><button class="icon-btn" data-action="close" data-m="mShare">✕</button></div>
+    <div class="sheet-body" id="shareBody"></div>
+  </div>
+</div>
+
+<!-- ===== 弹窗：导入菜谱 ===== -->
+<div class="modal" id="mImport">
+  <div class="mask" data-action="close" data-m="mImport"></div>
+  <div class="sheet narrow">
+    <div class="sheet-head"><h2>📥 导入菜谱</h2><button class="icon-btn" data-action="close" data-m="mImport">✕</button></div>
+    <div class="sheet-body">
+      <textarea id="importText" class="input" rows="6" placeholder="粘贴朋友发来的分享码，或完整备份 JSON…"></textarea>
+      <button class="btn" data-action="import-parse" style="width:100%;margin-top:12px">解析并导入</button>
+      <div style="display:flex;align-items:center;gap:10px;margin:14px 0">
+        <div style="flex:1;height:1px;background:var(--line)"></div>
+        <span class="muted" style="font-size:12px">或</span>
+        <div style="flex:1;height:1px;background:var(--line)"></div>
+      </div>
+      <button class="btn ghost" data-action="open-ocr" style="width:100%">🖼 识别图片导入（截图 / 拍照）</button>
+      <p class="muted" style="font-size:12px;margin-top:12px">支持：① 食谱小本分享码（一次可粘贴多个）② 设置页导出的完整备份 ③ 菜谱图片识别。分享码不含图片。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 弹窗：图片识别导入 ===== -->
+<div class="modal" id="mOcr">
+  <div class="mask" data-action="close" data-m="mOcr"></div>
+  <div class="sheet">
+    <div class="sheet-head"><h2>🖼 图片识别导入</h2><button class="icon-btn" data-action="close" data-m="mOcr">✕</button></div>
+    <div class="sheet-body" id="ocrBody"></div>
+  </div>
+</div>
+
+<!-- ===== 弹窗：首次欢迎 ===== -->
+<div class="modal" id="mWelcome">
+  <div class="mask" data-action="welcome-skip"></div>
+  <div class="sheet narrow">
+    <div class="sheet-head"><h2>👋 欢迎使用食谱小本</h2></div>
+    <div class="sheet-body">
+      <p style="font-size:14px">在这里记录你的拿手菜，做饭前把食材一键加进购物清单。所有数据存在你自己的设备上，不上传、不需要登录。</p>
+      <div class="c-btns">
+        <button class="btn ghost" data-action="welcome-skip">空白开始</button>
+        <button class="btn" data-action="welcome-seed">载入示例看看</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* ================= 数据 ================= */
+const LS_KEY = 'recipeBook.v1';
+const DEFAULT_STATE = { recipes: [], shopping: [], fridge: [], eats: [], settings: { theme: 'auto' }, firstDone: false, tombstones: { recipes: {}, shopping: {}, fridge: {}, eats: {} } };
+
+let state = load();
+function load(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
+    const s = JSON.parse(raw);
+    const emptyTomb = { recipes:{}, shopping:{}, fridge:{}, eats:{} };
+    const tombs = (s.tombstones && typeof s.tombstones === 'object') ? s.tombstones : {};
+    return {
+      recipes: Array.isArray(s.recipes) ? s.recipes : [],
+      shopping: Array.isArray(s.shopping) ? s.shopping : [],
+      fridge: Array.isArray(s.fridge) ? s.fridge : [],
+      eats: Array.isArray(s.eats) ? s.eats : [],
+      settings: Object.assign({theme:'auto'}, s.settings||{}),
+      firstDone: !!s.firstDone,
+      tombstones: { recipes:(tombs.recipes||{}), shopping:(tombs.shopping||{}), fridge:(tombs.fridge||{}), eats:(tombs.eats||{}) }
+    };
+  }catch(e){ return JSON.parse(JSON.stringify(DEFAULT_STATE)); }
+}
+function save(){
+  mergeFromLocalStorage();   // 多标签安全：先吸收其他标签页写入的更新，避免旧快照整份覆盖
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+  catch(e){ toast('保存失败：浏览器存储空间不足（可能图片过多）', true); }
+  scheduleSync();
+}
+/* 把 localStorage 里其他标签页写入的内容按条目合并进当前内存（同样只认更新时间晚的） */
+function mergeFromLocalStorage(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return false;
+    const other = JSON.parse(raw);
+    let changed = false;
+    ['recipes','shopping','fridge','eats'].forEach(sp=>{
+      (Array.isArray(other[sp]) ? other[sp] : []).forEach(o=>{
+        if(!o || !o.id) return;
+        const t = (state.tombstones[sp]||{})[o.id];
+        if(t && (o.updatedAt||o.createdAt||0) <= t) return;
+        const ex = state[sp].find(x=>x.id===o.id);
+        if(!ex){ state[sp].push(o); changed = true; }
+        else if((o.updatedAt||o.createdAt||0) > (ex.updatedAt||ex.createdAt||0)){ Object.assign(ex, o); changed = true; }
+      });
+    });
+    if(other.firstDone && !state.firstDone){ state.firstDone = true; changed = true; }
+    if(other.tombstones && typeof other.tombstones === 'object'){
+      ['recipes','shopping','fridge','eats'].forEach(sp=>{
+        Object.entries(other.tombstones[sp]||{}).forEach(([id,ts])=>{
+          const cur = (state.tombstones[sp]||{})[id];
+          if(!cur || ts > cur){ (state.tombstones[sp] ||= {})[id] = ts; changed = true; }
+        });
+      });
+    }
+    return changed;
+  }catch(e){ return false; }
+}
+/* 其他标签页写入了存储 → 立即吸收并重绘，多标签实时收敛 */
+window.addEventListener('storage', e=>{
+  if(e.key && e.key !== LS_KEY) return;
+  if(mergeFromLocalStorage()){ save(); renderAll(); }
+});
+
+/* ================= 同步（可选：运行 server.js 后自动读写同一个 SQLite 数据库） ================= */
+let syncTimer = null, syncOnline = false, lastSyncAt = 0;
+function scheduleSync(){ clearTimeout(syncTimer); syncTimer = setTimeout(()=>doSync(), 800); }
+function tombstone(space, ids){
+  (ids||[]).forEach(id=>{ if(id) (state.tombstones[space] ||= {})[id] = Date.now(); });
+}
+function setSyncStatus(on){
+  if(on) lastSyncAt = Date.now();
+  const firstUp = on && !syncOnline;
+  syncOnline = on;
+  renderSyncStatus();
+  if(firstUp) toast('已连接同步数据库，多设备数据将自动合并 🟢');
+}
+function renderSyncStatus(){
+  const el = $('#syncLine'); if(!el) return;
+  el.innerHTML = syncOnline
+    ? `🟢 已连接数据库（recipes.db），上次同步 ${new Date(lastSyncAt).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}。同一 WiFi 下的设备读写的是同一个库。`
+    : `⚪ 未连接（仅本地模式，数据只存在本设备）。在电脑上运行 <b>node server.js</b> 并通过 http:// 访问本页即可开启多设备同步。`;
+}
+async function doSync(manual){
+  try{
+    mergeFromLocalStorage();   // 推送前先吸收其他标签页/其他窗口的最新写入
+    const res = await fetch('/api/sync', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ recipes:state.recipes, shopping:state.shopping, fridge:state.fridge, eats:state.eats, settings:state.settings, firstDone:state.firstDone, tombstones:state.tombstones })
+    });
+    if(!res.ok) throw new Error('bad status ' + res.status);
+    const remote = await res.json();
+    const changed = mergeRemote(remote);
+    if(changed){ save(); renderAll(); }   // 合并结果写回本地、刷新界面，并触发一次收敛同步
+    setSyncStatus(true);
+    if(manual) toast('同步完成 🔄');
+  }catch(e){
+    setSyncStatus(false);
+    if(manual) toast('连不上同步服务，当前为仅本地模式', true);
+  }
+}
+function mergeRemote(remote){
+  let changed = false;
+  const SPACES = ['recipes','shopping','fridge','eats'];
+  // 1) 墓碑合并（保留更晚的删除时间）
+  if(remote.tombstones){
+    SPACES.forEach(sp=>{
+      Object.entries(remote.tombstones[sp]||{}).forEach(([id,ts])=>{
+        const cur = (state.tombstones[sp]||{})[id];
+        if(!cur || ts > cur){ (state.tombstones[sp] ||= {})[id] = ts; changed = true; }
+      });
+    });
+  }
+  // 2) 本地应用墓碑（删除时间不晚于墓碑的条目）
+  SPACES.forEach(sp=>{
+    Object.entries(state.tombstones[sp]||{}).forEach(([id,ts])=>{
+      const idx = state[sp].findIndex(x=>x.id===id);
+      if(idx >= 0){
+        const it = state[sp][idx];
+        if((it.updatedAt||it.createdAt||0) <= ts){ state[sp].splice(idx,1); changed = true; }
+      }
+    });
+  });
+  // 3) 合并远端条目：同 id 取更新时间晚的；被墓碑删除且未重新编辑的拒收
+  SPACES.forEach(sp=>{
+    (remote[sp]||[]).forEach(o=>{
+      if(!o || !o.id) return;
+      const t = (state.tombstones[sp]||{})[o.id];
+      if(t && (o.updatedAt||o.createdAt||0) <= t) return;
+      const ex = state[sp].find(x=>x.id===o.id);
+      if(!ex){ state[sp].push(o); changed = true; }
+      else if((o.updatedAt||o.createdAt||0) > (ex.updatedAt||ex.createdAt||0)){ Object.assign(ex, o); changed = true; }
+    });
+  });
+  // 4) 设置与首次使用标记合并
+  if(remote.settings && typeof remote.settings === 'object'){
+    if(JSON.stringify(remote.settings) !== JSON.stringify(state.settings)){ state.settings = {...state.settings, ...remote.settings}; changed = true; }
+  }
+  if(remote.firstDone && !state.firstDone){ state.firstDone = true; changed = true; }
+  return changed;
+}
+setInterval(()=>{ if(document.visibilityState === 'visible') doSync(); }, 30000);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible') doSync(); });
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const $ = s => document.querySelector(s);
+
+/* ================= UI 状态 ================= */
+const ui = {
+  tab:'recipes', search:'', cat:'all', libMode:'mine', recMode:null,
+  detail:null, editing:false, form:null,
+  randomId:null, shareId:null, cookRecipeId:null, fridgeEditId:null, confirmBtns:[], checkedIng:new Set(),
+  clog:null, eat:null, eatSearch:'',
+  ocr:{ image:null, busy:false, progress:0, statusText:'', error:'' }
+};
+let ocrWorker = null;
+
+/* 常备食材快捷添加 */
+const FRIDGE_QUICK = ['鸡蛋','盐','生抽','老抽','醋','食用油','小葱','姜','蒜','料酒','蚝油','香油'];
+
+/* 常见食材冷藏保鲜时长（天）；999 视为“耐放”。按顺序首个命中生效。 */
+const SHELF_DB = [
+  {keys:['虾皮','干贝','瑶柱','腊肉','腊肠','火腿','咸菜','泡菜','豆腐乳','挂面','米粉(干)','米粉','粉丝','粉条','红薯粉','魔芋','茶叶','咖啡','海苔','月饼','咖喱块','咖喱'],days:90},
+  {keys:['蔬菜沙拉','沙拉菜','轻食','寿司','刺身'],days:1},
+  {keys:['肥牛卷','肥牛','羊肉卷','牛肉卷','牛排','羊排'],days:2},
+  {keys:['鸡爪','鸭脖','鸭翅','鸭锁骨','鸭货'],days:2},
+  {keys:['丸子','鱼豆腐','蟹棒','午餐肉','香肠'],days:5},
+  {keys:['年糕','汤圆','粽子','麻薯','手抓饼'],days:14},
+  {keys:['凉皮','米线','河粉','粿条'],days:3},
+  {keys:['蛋糕','泡芙','提拉米苏','甜甜圈','蛋挞'],days:3},
+  {keys:['圣女果'],days:7},
+  {keys:['龙眼','枇杷'],days:5},
+  {keys:['榴莲'],days:3},
+  {keys:['甜瓜','香瓜'],days:5},
+  {keys:['火龙果'],days:8},
+  {keys:['牛油果'],days:6},
+  {keys:['金桔','柑'],days:16},
+  {keys:['海带','海藻','裙带菜'],days:7},
+  {keys:['鸡蛋','咸鸭蛋','皮蛋','蛋'],days:21},
+  {keys:['牛奶','鲜奶','鲜奶油'],days:7},
+  {keys:['酸奶','乳酸菌'],days:12},
+  {keys:['芝士','奶酪','奶油奶酪','黄油'],days:21},
+  {keys:['豆腐','豆花'],days:3},
+  {keys:['豆干','豆皮','腐竹','豆浆','豆芽','千张','豆腐丝','豆腐泡','冻豆腐'],days:3},
+  {keys:['菠菜','生菜','油麦菜','油菜','空心菜','茼蒿','苋菜','香菜','韭菜','茭白'],days:4},
+  {keys:['娃娃菜','白菜','包菜','卷心菜','甘蓝'],days:7},
+  {keys:['黄瓜'],days:6},
+  {keys:['番茄','西红柿'],days:6},
+  {keys:['西兰花'],days:6},
+  {keys:['菜花','花菜'],days:7},
+  {keys:['丝瓜','西葫芦'],days:5},
+  {keys:['茄子'],days:6},
+  {keys:['苦瓜'],days:5},
+  {keys:['冬瓜'],days:10},
+  {keys:['南瓜'],days:30},
+  {keys:['青椒','尖椒','彩椒','杭椒','小米辣','辣椒'],days:8},
+  {keys:['香菇','蘑菇','金针菇','杏鲍菇','平菇','菇'],days:6},
+  {keys:['芹菜','莴笋'],days:8},
+  {keys:['玉米'],days:5},
+  {keys:['荷兰豆','四季豆','豆角','豇豆','秋葵','芦笋','笋','竹笋'],days:5},
+  {keys:['草莓','桑葚'],days:3},
+  {keys:['蓝莓','葡萄','樱桃','荔枝'],days:6},
+  {keys:['香蕉'],days:4},
+  {keys:['西瓜','哈密瓜','蜜瓜'],days:3},
+  {keys:['芒果','桃','猕猴桃','菠萝'],days:5},
+  {keys:['柠檬'],days:21},
+  {keys:['苹果','梨','橙子','橘子','柚子','橙'],days:20},
+  {keys:['土豆','马铃薯','地瓜','红薯','芋头'],days:20},
+  {keys:['山药'],days:16},
+  {keys:['胡萝卜'],days:16},
+  {keys:['莲藕','藕'],days:8},
+  {keys:['萝卜'],days:14},
+  {keys:['洋葱'],days:20},
+  {keys:['姜'],days:25},
+  {keys:['蒜'],days:40},
+  {keys:['葱'],days:8},
+  {keys:['猪里脊','里脊','五花肉','排骨','猪排','牛肉','羊肉','猪肉末','肉末','肉馅','鸡翅','鸡腿','鸡翅中','鸡胸','鸡肉','鸭肉','鸭','鸡','肉'],days:2},
+  {keys:['鲜虾','虾','虾仁'],days:2},
+  {keys:['鱼'],days:2},
+  {keys:['蟹','贝','蛤','鱿鱼','海鲜'],days:2},
+  {keys:['熟食','卤味','剩菜','剩饭'],days:3},
+  {keys:['米饭','粥'],days:3},
+  {keys:['面条','鲜面','饺子','馄饨','包子'],days:14},
+  {keys:['面包','吐司'],days:5},
+  {keys:['盐','白糖','冰糖','红糖','生抽','老抽','酱油','醋','香醋','料酒','蚝油','香油','食用油','橄榄油','油','蜂蜜','胡椒粉','花椒粉','辣椒面','淀粉','面粉','大米','小米','燕麦','糯米','芝麻','花生','木耳','香菇干','红枣','枸杞','虾米','豆瓣酱','甜面酱','黄豆酱','番茄酱','辣酱','豆豉','剁椒','泡椒','腐乳','榨菜','酸豆角','芝麻酱','花生酱','果酱','炼乳','沙拉酱','芥末','味噌'],days:999},
+];
+function shelfDays(name){
+  const n = String(name||'');
+  for(const e of SHELF_DB){ if(e.keys.some(k=>n.includes(k))) return e.days; }
+  return 7;
+}
+function expiryInfo(it){
+  const days = (it.days!=null && it.days!=='' && +it.days>0) ? +it.days : shelfDays(it.name);
+  const staple = days>=365;
+  const bought = it.boughtAt || it.createdAt || Date.now();
+  const exp = bought + days*86400000;
+  const remain = Math.ceil((exp - Date.now())/86400000);
+  return {days, staple, bought, exp, remain};
+}
+function ingredientEmoji(name){
+  const n = String(name||'');
+  const M = [
+    ['虾','🦐'],['蟹','🦀'],['鱼','🐟'],['鱿鱼','🦑'],
+    ['鸡蛋','🥚'],['皮蛋','🥚'],['咸鸭蛋','🥚'],['蛋','🥚'],
+    ['牛奶','🥛'],['酸奶','🥛'],['奶油','🥛'],['芝士','🧀'],['奶酪','🧀'],['黄油','🧈'],
+    ['豆腐','🍥'],['豆干','🍥'],['千张','🍥'],['腐竹','🌱'],['豆芽','🌱'],['豆浆','🥛'],
+    ['西兰花','🥦'],['菜花','🥦'],['花菜','🥦'],
+    ['黄瓜','🥒'],['丝瓜','🥒'],['西葫芦','🥒'],['苦瓜','🥒'],
+    ['番茄','🍅'],['西红柿','🍅'],
+    ['茄子','🍆'],['玉米','🌽'],
+    ['香菇','🍄'],['蘑菇','🍄'],['金针菇','🍄'],['杏鲍菇','🍄'],['平菇','🍄'],['菇','🍄'],
+    ['土豆','🥔'],['马铃薯','🥔'],['山药','🥔'],['地瓜','🍠'],['红薯','🍠'],['芋头','🍠'],
+    ['洋葱','🧅'],['胡萝卜','🥕'],['萝卜','🥕'],['莲藕','🥔'],['藕','🥔'],
+    ['娃娃菜','🥬'],['白菜','🥬'],['包菜','🥬'],['卷心菜','🥬'],['生菜','🥬'],['菠菜','🥬'],['油菜','🥬'],['空心菜','🥬'],['油麦菜','🥬'],['芹菜','🥬'],['韭菜','🥬'],['茼蒿','🥬'],['香菜','🌿'],
+    ['葱','🧅'],['蒜','🧄'],['姜','🫚'],
+    ['青椒','🫑'],['尖椒','🫑'],['彩椒','🫑'],['杭椒','🫑'],['小米辣','🌶️'],['辣椒','🌶️'],
+    ['冬瓜','🍈'],['南瓜','🎃'],
+    ['苹果','🍎'],['梨','🍐'],['橙','🍊'],['橘子','🍊'],['柚子','🍊'],['柠檬','🍋'],['香蕉','🍌'],['草莓','🍓'],['葡萄','🍇'],['西瓜','🍉'],['哈密瓜','🍈'],['蜜瓜','🍈'],['芒果','🥭'],['桃','🍑'],['菠萝','🍍'],['樱桃','🍒'],['猕猴桃','🥝'],['蓝莓','🫐'],
+    ['猪里脊','🥩'],['里脊','🥩'],['五花肉','🥩'],['排骨','🍖'],['猪排','🍖'],['牛肉','🥩'],['羊肉','🥩'],['猪肉末','🥩'],['肉末','🥩'],['肉馅','🥩'],
+    ['鸡翅','🍗'],['鸡腿','🍗'],['鸡翅中','🍗'],['鸡胸','🍗'],['鸡肉','🍗'],['鸡','🍗'],['鸭','🍗'],
+    ['培根','🥓'],['火腿','🌭'],['腊肠','🌭'],['香肠','🌭'],
+    ['鲜虾','🦐'],['虾仁','🦐'],
+    ['面包','🍞'],['吐司','🍞'],['米饭','🍚'],['粥','🥣'],['面条','🍜'],['饺子','🥟'],['馄饨','🥟'],['包子','🥟'],
+    ['面粉','🌾'],['大米','🌾'],['小米','🌾'],['燕麦','🌾'],['糯米','🌾'],['挂面','🍜'],
+    ['盐','🧂'],['白糖','🧂'],['冰糖','🧂'],['红糖','🧂'],['胡椒粉','🧂'],['花椒粉','🧂'],['辣椒面','🌶️'],
+    ['生抽','🧴'],['老抽','🧴'],['酱油','🧴'],['醋','🧴'],['香醋','🧴'],['料酒','🧴'],['蚝油','🧴'],['香油','🧴'],['食用油','🧴'],['橄榄油','🧴'],['油','🧴'],
+    ['蜂蜜','🍯'],['豆瓣酱','🌶️'],['甜面酱','🥣'],['黄豆酱','🥣'],['番茄酱','🥫'],['辣酱','🌶️'],['豆豉','🥫'],
+    ['红枣','🍒'],['枸杞','🫐'],['木耳','🍄'],['香菇干','🍄'],['花生','🥜'],['芝麻','🌾'],['淀粉','🥣']
+  ];
+  for(const [k,v] of M){ if(n.includes(k)) return v; }
+  return '🥘';
+}
+
+/* ================= 示例数据 ================= */
+const SAMPLES = [
+  {name:'番茄炒蛋',category:'家常菜',time:15,servings:2,calories:320,tags:['快手','下饭'],
+   ingredients:[{name:'番茄',amount:'2个',grams:300},{name:'鸡蛋',amount:'3个',grams:150},{name:'小葱',amount:'1根',grams:5},{name:'盐',amount:'适量',grams:null},{name:'糖',amount:'半勺',grams:null},{name:'食用油',amount:'适量',grams:20}],
+   steps:['番茄切块，鸡蛋加少许盐打散。','热锅倒油，倒入蛋液炒至凝固后盛出。','再加少许油，下番茄炒出汁水，加糖和盐调味。','倒回鸡蛋翻炒均匀，撒葱花出锅。'],
+   notes:'喜欢汤汁多的可以加小半碗水焖一下。'},
+  {name:'可乐鸡翅',category:'家常菜',time:30,servings:2,calories:480,tags:['下饭','宴客'],
+   ingredients:[{name:'鸡翅中',amount:'8个',grams:500},{name:'可乐',amount:'1罐',grams:330},{name:'姜片',amount:'3片',grams:10},{name:'生抽',amount:'2勺',grams:null},{name:'老抽',amount:'半勺',grams:null},{name:'料酒',amount:'1勺',grams:null}],
+   steps:['鸡翅两面划两刀，冷水下锅焯水后捞出。','少油把鸡翅煎至两面金黄。','倒入可乐没过鸡翅，加生抽、老抽、料酒、姜片。','大火烧开转中小火煮 15 分钟，最后大火收汁即可。'],
+   notes:'收汁时勤翻动，避免糊锅。'},
+  {name:'紫菜蛋花汤',category:'汤羹',time:10,servings:2,calories:90,tags:['快手','清淡'],
+   ingredients:[{name:'紫菜',amount:'1小块',grams:10},{name:'鸡蛋',amount:'1个',grams:50},{name:'虾皮',amount:'少许',grams:5},{name:'香油',amount:'几滴',grams:null},{name:'盐',amount:'适量',grams:null},{name:'葱花',amount:'少许',grams:null}],
+   steps:['紫菜撕碎泡水，虾皮冲洗干净。','锅中水烧开，放入紫菜和虾皮。','淋入打散的蛋液，稍等凝固再搅出蛋花。','加盐调味，关火淋香油、撒葱花。'],
+   notes:''},
+  {name:'蒜蓉西兰花',category:'素菜',time:12,servings:2,calories:130,tags:['健康','快手'],
+   ingredients:[{name:'西兰花',amount:'1颗',grams:300},{name:'大蒜',amount:'4瓣',grams:15},{name:'盐',amount:'适量',grams:null},{name:'食用油',amount:'适量',grams:15}],
+   steps:['西兰花切小朵，淡盐水泡 10 分钟后洗净。','水开加少许盐和油，焯水 1 分钟捞出过凉。','热油爆香蒜末，倒入西兰花大火翻炒。','加盐调味，炒匀出锅。'],
+   notes:''}
+];
+/* ============ 内置菜谱库（离线自带，可存入"我的食谱"后自由编辑） ============ */
+const BUILTIN=[
+{id:'b001',lib:true,name:'青椒肉丝',category:'家常菜',time:15,servings:2,calories:380,tags:['快手','下饭'],
+ ingredients:[{name:'猪里脊',amount:'250克',grams:null},{name:'青椒',amount:'2个',grams:150},{name:'蒜',amount:'2瓣',grams:null},{name:'生抽',amount:'1勺',grams:null},{name:'淀粉',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['里脊逆纹切成火柴棍粗的丝，加半勺生抽、1勺淀粉抓匀，再淋半勺油锁水，腌10分钟。','青椒去籽，切成和肉丝差不多粗的丝；蒜切片。','大火烧热锅再倒油，油温六成热（木筷插入冒密集小泡）下肉丝，快速滑散炒至全部变白，约40秒，立刻盛出。','用锅中余油中火煸香蒜片，转大火下青椒丝炒30秒，炒到表皮起小白泡。','倒回肉丝，沿锅边淋半勺生抽，加1小撮盐，大火颠锅10秒让味道裹匀，出锅。'],notes:''},
+{id:'b002',lib:true,name:'红烧肉',category:'家常菜',time:90,servings:4,calories:650,tags:['硬菜','宴客'],
+ ingredients:[{name:'五花肉',amount:'600克',grams:600},{name:'冰糖',amount:'20克',grams:20},{name:'生抽',amount:'2勺',grams:null},{name:'老抽',amount:'1勺',grams:null},{name:'料酒',amount:'2勺',grams:null},{name:'姜片',amount:'3片',grams:null},{name:'八角',amount:'2个',grams:null},{name:'小葱',amount:'2根',grams:null}],
+ steps:['五花肉连皮切成3厘米见方的块，冷水下锅加2片姜、1勺料酒，大火煮开撇净浮沫，再煮2分钟，捞出用温水冲净。','炒锅放半勺油，下冰糖，全程小火慢熬并不断搅动，熬到枣红色、冒细密小泡时立刻下肉块（晚了会苦）。','转中火翻炒，让每块肉都裹上糖色，煸到边缘微微出油。','加葱段、姜片、八角，倒入热水完全没过肉，加生抽、老抽和1勺料酒，大火烧开转小火，盖盖焖60分钟，中途翻动两次。','挑出葱姜八角，开大火收汁，不断把汤汁浇在肉上，收到汤汁浓稠、能挂在肉块上，约5分钟。'],notes:'炒糖色小火慢炒，变琥珀色立刻下肉，糊了会发苦。'},
+{id:'b003',lib:true,name:'鱼香肉丝',category:'家常菜',time:20,servings:3,calories:420,tags:['经典','下饭'],
+ ingredients:[{name:'猪里脊',amount:'250克',grams:250},{name:'黑木耳',amount:'50克',grams:50},{name:'胡萝卜',amount:'1根',grams:120},{name:'青椒',amount:'1个',grams:80},{name:'郫县豆瓣酱',amount:'1勺',grams:null},{name:'糖',amount:'1勺',grams:null},{name:'醋',amount:'1勺',grams:null},{name:'淀粉',amount:'1勺',grams:null}],
+ steps:['里脊切丝，加半勺盐、1勺淀粉抓匀腌10分钟；木耳泡发切丝，胡萝卜、青椒切丝，葱蒜切末。','调鱼香汁：2勺糖、2勺醋、1勺生抽、1勺淀粉加3勺清水，搅匀备用。','大火热锅热油，下肉丝滑散炒到变白，约半分钟，盛出。','余油下剁碎的豆瓣酱和姜蒜末，小火炒出红油，约1分钟。','转大火下三丝炒1分钟到断生，倒回肉丝、淋入鱼香汁，翻炒到汤汁浓稠裹住食材即可。'],notes:''},
+{id:'b004',lib:true,name:'宫保鸡丁',category:'家常菜',time:25,servings:3,calories:450,tags:['经典','下饭'],
+ ingredients:[{name:'鸡胸肉',amount:'300克',grams:300},{name:'花生米',amount:'50克',grams:50},{name:'干辣椒',amount:'6个',grams:null},{name:'花椒',amount:'少许',grams:null},{name:'葱白',amount:'2根',grams:null},{name:'糖',amount:'1勺',grams:null},{name:'醋',amount:'1勺',grams:null},{name:'生抽',amount:'1勺',grams:null}],
+ steps:['鸡胸切成1.5厘米见方的丁，加半勺盐、1勺淀粉、半勺料酒抓匀腌15分钟；大葱切1厘米的段。','小火用少油把花生米炸到微黄、听见噼啪声就捞出放凉（凉了才脆）。','留底油，最小火下干辣椒段和花椒，炒到辣椒变棕红、香味出来，千万别炒糊。','转大火下鸡丁，翻炒约2分钟到表面微焦、内部刚熟。','加葱段，倒入1勺糖、1勺醋、1勺生抽、半勺淀粉加2勺水调成的味汁翻匀，最后加花生米，颠两下出锅。'],notes:''},
+{id:'b005',lib:true,name:'麻婆豆腐',category:'家常菜',time:20,servings:3,calories:350,tags:['麻辣','下饭'],
+ ingredients:[{name:'嫩豆腐',amount:'400克',grams:400},{name:'猪肉末',amount:'80克',grams:80},{name:'郫县豆瓣酱',amount:'1勺',grams:null},{name:'花椒粉',amount:'少许',grams:null},{name:'蒜苗',amount:'2根',grams:null},{name:'姜',amount:'2片',grams:null},{name:'蒜',amount:'2瓣',grams:null}],
+ steps:['嫩豆腐切成2厘米的方块，放进加了1小勺盐的开水里小火煮1分钟去豆腥，捞出泡在温水里备用。','中火把肉末煸到酥香、颜色金黄，盛出。','底油下剁碎的豆瓣酱、姜末蒜末，小火炒出红油，约1分钟。','加1碗热水烧开，放豆腐，中火煮3分钟入味，期间只用锅铲背轻推，不要翻炒。','分2次淋入水淀粉勾薄芡，撒回肉末和蒜苗段，出锅后再撒花椒粉。'],notes:''},
+{id:'b006',lib:true,name:'糖醋排骨',category:'家常菜',time:50,servings:3,calories:560,tags:['糖醋','硬菜'],
+ ingredients:[{name:'肋排',amount:'500克',grams:500},{name:'冰糖',amount:'30克',grams:30},{name:'香醋',amount:'2勺',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'料酒',amount:'1勺',grams:null},{name:'姜片',amount:'3片',grams:null},{name:'白芝麻',amount:'少许',grams:null}],
+ steps:['肋排剁成4厘米的段，冷水下锅加姜片和料酒，煮开撇沫，捞出用温水冲净沥干。','小火用1勺油把冰糖熬到枣红色、冒小泡，立刻倒入排骨快速翻匀上色。','加生抽、1勺香醋和开水没过排骨，大火烧开转小火，盖盖焖35分钟。','开大火收汁，收到汤汁起大泡、能挂住排骨，约3分钟。','关火前沿锅边淋剩下的1勺香醋翻匀（出锅前放醋才有香气），撒白芝麻装盘。'],notes:'醋分两次放，出锅前那次才有香气。'},
+{id:'b007',lib:true,name:'回锅肉',category:'家常菜',time:30,servings:3,calories:580,tags:['下饭','川菜'],
+ ingredients:[{name:'五花肉',amount:'400克',grams:400},{name:'蒜苗',amount:'3根',grams:60},{name:'郫县豆瓣酱',amount:'1勺',grams:null},{name:'甜面酱',amount:'1勺',grams:null},{name:'豆豉',amount:'少许',grams:null},{name:'姜片',amount:'3片',grams:null}],
+ steps:['整块五花肉冷水下锅，加姜片和1勺料酒，中火煮20分钟到筷子能轻松插透，捞出晾凉后切成2毫米薄片。','蒜苗斜切段，梗和叶分开放。','中火煸炒肉片约3分钟，把肥肉的油煸出来，肉片卷成灯盏窝。','把肉片推到锅边，下豆瓣酱、豆豉、甜面酱，小火炒出红油后与肉片合炒。','先下蒜苗梗炒10秒，再下蒜苗叶，炒到断生立刻出锅。'],notes:''},
+{id:'b008',lib:true,name:'酸辣土豆丝',category:'家常菜',time:15,servings:2,calories:220,tags:['快手','酸辣'],
+ ingredients:[{name:'土豆',amount:'2个',grams:400},{name:'干辣椒',amount:'3个',grams:null},{name:'花椒',amount:'少许',grams:null},{name:'蒜',amount:'2瓣',grams:null},{name:'白醋',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['土豆去皮切成火柴棍粗的细丝，清水冲洗3遍去掉表面淀粉，再泡入清水。','干辣椒剪段，蒜切片。','大火热油，转小火煸香花椒、干辣椒，再下蒜片。','土豆丝沥干下锅，大火翻炒2分钟到边缘略透明。','沿锅边淋1勺白醋（锅边淋才有香气），加盐炒匀立刻出锅，全程不超过3分钟。'],notes:'土豆丝泡水是脆的关键。'},
+{id:'b009',lib:true,name:'红烧茄子',category:'家常菜',time:20,servings:2,calories:320,tags:['下饭','素菜'],
+ ingredients:[{name:'茄子',amount:'2根',grams:400},{name:'蒜',amount:'4瓣',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'糖',amount:'1勺',grams:null},{name:'淀粉',amount:'1勺',grams:null},{name:'小葱',amount:'1根',grams:null}],
+ steps:['茄子切滚刀块，撒1小勺盐拌匀腌10分钟，挤掉杀出来的水分。','调汁：2勺生抽、1勺糖、1勺淀粉加半碗清水。','茄子表面拍一层薄干淀粉，油烧至七成热（筷子插入周围快速冒泡）下锅炸3分钟到金黄，捞出。','锅留底油爆香蒜末，倒回茄子和调好的汁。','大火翻炒到汤汁浓稠裹住茄子，撒葱花出锅。'],notes:''},
+{id:'b010',lib:true,name:'木须肉',category:'家常菜',time:15,servings:2,calories:380,tags:['家常','快手'],
+ ingredients:[{name:'猪里脊',amount:'150克',grams:150},{name:'鸡蛋',amount:'2个',grams:100},{name:'黑木耳',amount:'50克',grams:50},{name:'黄瓜',amount:'半根',grams:100},{name:'生抽',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['里脊切片，加盐和半勺淀粉腌10分钟；鸡蛋加少许盐打散；木耳泡发撕小朵，黄瓜切菱形片。','热锅热油倒入蛋液，凝固后用铲子划成大块盛出。','补少许油，滑炒肉片到完全变白。','下木耳翻炒1分钟，再下黄瓜片炒30秒。','倒回鸡蛋，加1勺生抽和少许盐，翻炒均匀出锅。'],notes:''},
+{id:'b011',lib:true,name:'蒜苔炒肉',category:'家常菜',time:15,servings:2,calories:360,tags:['快手','下饭'],
+ ingredients:[{name:'蒜苔',amount:'250克',grams:250},{name:'猪里脊',amount:'200克',grams:200},{name:'生抽',amount:'1勺',grams:null},{name:'蚝油',amount:'1勺',grams:null},{name:'蒜',amount:'2瓣',grams:null}],
+ steps:['里脊切片加盐、半勺淀粉腌10分钟；蒜苔切成4厘米的段。','热油滑炒肉丝到变白，盛出。','下蒜苔，中火炒2分钟到表皮微微起皱、颜色更翠绿。','倒回肉丝，加1勺生抽、1勺蚝油，大火翻炒30秒出锅。'],notes:''},
+{id:'b012',lib:true,name:'地三鲜',category:'家常菜',time:25,servings:3,calories:330,tags:['东北菜','下饭'],
+ ingredients:[{name:'土豆',amount:'1个',grams:200},{name:'茄子',amount:'1根',grams:200},{name:'青椒',amount:'1个',grams:80},{name:'蒜',amount:'3瓣',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'糖',amount:'半勺',grams:null},{name:'淀粉',amount:'1勺',grams:null}],
+ steps:['土豆、茄子切滚刀块，青椒去籽手撕成片。','油烧至六成热，先炸土豆3分钟到边缘金黄，再下茄子炸2分钟到变软，捞出控油。','调汁：2勺生抽、半勺糖、1勺淀粉加半碗水。','锅留底油爆香蒜末，下青椒块炒30秒。','倒回土豆茄子，淋入料汁，大火翻匀收汁即可。'],notes:''},
+{id:'b013',lib:true,name:'可乐鸡翅',category:'荤菜',time:30,servings:2,calories:480,tags:['下饭','新手友好'],
+ ingredients:[{name:'鸡翅中',amount:'8个',grams:500},{name:'可乐',amount:'1罐',grams:330},{name:'姜片',amount:'3片',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'老抽',amount:'半勺',grams:null},{name:'料酒',amount:'1勺',grams:null}],
+ steps:['鸡翅正反各划两刀方便入味，冷水下锅加姜片和1勺料酒，煮开焯出浮沫，捞出冲净。','少油中火把鸡翅煎到两面金黄，每面约2分钟。','倒入1罐可乐，加2勺生抽、半勺老抽、1勺料酒和姜片，大火烧开。','转中小火盖盖煮15分钟，中途翻面一次。','开大火收汁，不断翻动鸡翅，收到汤汁浓稠、起大泡裹住鸡翅即可。'],notes:'收汁时勤翻动，避免糊锅。'},
+{id:'b014',lib:true,name:'红烧鸡翅',category:'荤菜',time:25,servings:2,calories:460,tags:['下饭','新手友好'],
+ ingredients:[{name:'鸡翅中',amount:'8个',grams:500},{name:'生抽',amount:'2勺',grams:null},{name:'老抽',amount:'半勺',grams:null},{name:'冰糖',amount:'10克',grams:10},{name:'姜片',amount:'3片',grams:null},{name:'料酒',amount:'1勺',grams:null}],
+ steps:['鸡翅正反划两刀，冷水下锅焯水后捞出冲净。','小火用10克冰糖加半勺油熬到枣红色，下鸡翅翻炒上色。','加葱姜、2勺生抽、半勺老抽、1勺料酒和热水没过鸡翅。','中小火盖盖焖15分钟，开盖大火收汁到浓稠。'],notes:''},
+{id:'b015',lib:true,name:'清蒸鲈鱼',category:'荤菜',time:20,servings:3,calories:280,tags:['清淡','宴客'],
+ ingredients:[{name:'鲈鱼',amount:'1条',grams:600},{name:'小葱',amount:'2根',grams:null},{name:'姜',amount:'1块',grams:30},{name:'蒸鱼豉油',amount:'2勺',grams:null},{name:'食用油',amount:'1勺',grams:null},{name:'料酒',amount:'1勺',grams:null}],
+ steps:['鲈鱼洗净擦干，两面各划3刀，用1勺料酒抹匀腌5分钟；盘底垫葱段姜片。','蒸锅水完全烧开后再放鱼，大火足汽蒸8分钟（一斤半以内的鱼），关火再虚蒸2分钟。','小心倒掉盘中蒸出来的腥水，去掉旧葱姜，铺上新切的细葱丝姜丝。','沿盘边淋2勺蒸鱼豉油，别浇在鱼身上。','烧2勺油到冒烟，浇在葱丝上激出香气，趁热吃。'],notes:'蒸的时间按鱼大小调整，一斤半以内8分钟即可。'},
+{id:'b016',lib:true,name:'白灼虾',category:'荤菜',time:10,servings:3,calories:220,tags:['清淡','海鲜'],
+ ingredients:[{name:'鲜虾',amount:'500克',grams:500},{name:'姜',amount:'3片',grams:null},{name:'小葱',amount:'2根',grams:null},{name:'生抽',amount:'1勺',grams:null},{name:'香油',amount:'几滴',grams:null}],
+ steps:['虾剪去虾须虾脚，冲洗干净。','锅中水烧开，放姜片葱段，水大滚时下虾。','煮2-3分钟，虾身变红卷曲就捞出，立刻过一遍冰水，肉质更弹。','1勺生抽加几滴香油、1勺煮虾的水，调成蘸汁。'],notes:''},
+{id:'b017',lib:true,name:'啤酒鸭',category:'荤菜',time:70,servings:4,calories:620,tags:['硬菜','下饭'],
+ ingredients:[{name:'鸭肉',amount:'800克',grams:800},{name:'啤酒',amount:'1罐',grams:500},{name:'姜',amount:'1块',grams:30},{name:'蒜',amount:'4瓣',grams:null},{name:'干辣椒',amount:'3个',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'老抽',amount:'1勺',grams:null},{name:'冰糖',amount:'10克',grams:10}],
+ steps:['鸭肉剁块，冷水下锅焯水，煮出浮沫捞出洗净。','中火干煸鸭块5分钟，煸出鸭油、表皮微黄，盛出倒掉多余的油。','下姜蒜和干辣椒炒香，倒回鸭块，加生抽、老抽、冰糖炒上色。','倒入1罐啤酒和热水没过鸭肉，烧开转小火盖盖焖50分钟。','大火收汁到浓稠挂勺即可。'],notes:''},
+{id:'b018',lib:true,name:'红烧带鱼',category:'荤菜',time:30,servings:3,calories:420,tags:['下饭','海鲜'],
+ ingredients:[{name:'带鱼',amount:'400克',grams:400},{name:'姜',amount:'3片',grams:null},{name:'蒜',amount:'3瓣',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'香醋',amount:'1勺',grams:null},{name:'糖',amount:'1勺',grams:null},{name:'料酒',amount:'1勺',grams:null},{name:'面粉',amount:'少许',grams:null}],
+ steps:['带鱼段用厨房纸彻底吸干水分，两面薄拍一层面粉防粘。','油烧至六成热，中火煎带鱼，一面定型金黄后再翻面，共约4分钟。','盛出带鱼，用余油爆香姜蒜。','加1碗水、2勺生抽、1勺香醋、1勺糖、1勺料酒烧开，下带鱼。','中小火焖8分钟入味，大火收汁到汤汁裹住鱼块。'],notes:''},
+{id:'b019',lib:true,name:'蚝油生菜',category:'素菜',time:10,servings:2,calories:120,tags:['快手','清淡'],
+ ingredients:[{name:'生菜',amount:'2颗',grams:400},{name:'蚝油',amount:'2勺',grams:null},{name:'蒜',amount:'4瓣',grams:null},{name:'生抽',amount:'1勺',grams:null},{name:'糖',amount:'少许',grams:null}],
+ steps:['烧开一锅水，加1小勺盐和几滴油。','生菜下锅烫15秒立刻捞出，沥水摆盘。','热锅冷油小火爆香蒜末。','加2勺蚝油、1勺生抽、少许糖和2勺清水，煮开成酱汁。','酱汁趁热均匀淋在生菜上。'],notes:''},
+{id:'b020',lib:true,name:'干煸四季豆',category:'素菜',time:20,servings:3,calories:260,tags:['下饭','川菜'],
+ ingredients:[{name:'四季豆',amount:'400克',grams:400},{name:'猪肉末',amount:'50克',grams:50},{name:'干辣椒',amount:'4个',grams:null},{name:'花椒',amount:'少许',grams:null},{name:'蒜',amount:'3瓣',grams:null},{name:'生抽',amount:'1勺',grams:null}],
+ steps:['四季豆掰成长段，用厨房纸彻底擦干（有水下油会炸锅）。','油烧至六成热，中火炸四季豆4-5分钟到表皮起皱、出现虎皮，捞出控油。','锅留底油，中火煸肉末到酥香变色。','下干辣椒段、花椒、蒜末，小火炒香。','倒回四季豆，加1勺生抽，大火翻炒均匀出锅。'],notes:'四季豆一定要炒熟透，生的有毒。'},
+{id:'b021',lib:true,name:'醋溜白菜',category:'素菜',time:10,servings:2,calories:130,tags:['快手','酸辣'],
+ ingredients:[{name:'白菜',amount:'半棵',grams:500},{name:'干辣椒',amount:'3个',grams:null},{name:'花椒',amount:'少许',grams:null},{name:'香醋',amount:'2勺',grams:null},{name:'糖',amount:'1勺',grams:null},{name:'淀粉',amount:'少许',grams:null}],
+ steps:['白菜帮斜刀片成薄片，菜叶撕成大块，帮和叶分开放。','小火爆香花椒和干辣椒段。','转大火，先下白菜帮炒1分钟，再下菜叶炒30秒。','加1勺糖、1勺醋，快速翻匀。','淋少许水淀粉让酱汁裹住白菜，出锅前再补半勺醋提香。'],notes:''},
+{id:'b022',lib:true,name:'香菇油菜',category:'素菜',time:15,servings:2,calories:150,tags:['清淡','宴客'],
+ ingredients:[{name:'油菜',amount:'400克',grams:400},{name:'鲜香菇',amount:'8朵',grams:200},{name:'蚝油',amount:'1勺',grams:null},{name:'蒜',amount:'3瓣',grams:null},{name:'淀粉',amount:'少许',grams:null}],
+ steps:['油菜对半切开，放入加盐和几滴油的沸水里焯30秒，过凉水后摆盘。','香菇洗净，顶部划十字花刀。','热油爆香蒜末，中火炒香菇2分钟到变软出香。','加1勺蚝油和小半碗水，煮开后勾薄芡。','连汁浇在摆好的油菜上。'],notes:''},
+{id:'b023',lib:true,name:'凉拌黄瓜',category:'凉菜',time:10,servings:2,calories:90,tags:['快手','爽口'],
+ ingredients:[{name:'黄瓜',amount:'2根',grams:400},{name:'蒜',amount:'4瓣',grams:null},{name:'香油',amount:'1勺',grams:null},{name:'香醋',amount:'1勺',grams:null},{name:'生抽',amount:'1勺',grams:null},{name:'糖',amount:'少许',grams:null}],
+ steps:['黄瓜用刀拍裂，斜切成段。','加半勺盐拌匀腌5分钟，倒掉腌出的水分（更脆更入味）。','加蒜末、1勺醋、1勺生抽、少许糖和1勺香油。','拌匀静置10分钟再吃，风味最佳。'],notes:'拍比切更入味。'},
+{id:'b024',lib:true,name:'虎皮青椒',category:'素菜',time:15,servings:2,calories:160,tags:['下饭','快手'],
+ ingredients:[{name:'青椒',amount:'4个',grams:250},{name:'蒜',amount:'3瓣',grams:null},{name:'生抽',amount:'1勺',grams:null},{name:'香醋',amount:'半勺',grams:null},{name:'糖',amount:'半勺',grams:null}],
+ steps:['青椒去蒂去籽，用刀背拍扁。','锅中少油，中火把青椒两面煎出焦香的虎皮纹，每面约2分钟。','下蒜末爆香。','加1勺生抽、半勺醋、半勺糖和2勺清水，小火烧1分钟收干汤汁。'],notes:''},
+{id:'b025',lib:true,name:'西红柿蛋汤',category:'汤羹',time:10,servings:2,calories:150,tags:['快手','清淡'],
+ ingredients:[{name:'番茄',amount:'2个',grams:300},{name:'鸡蛋',amount:'2个',grams:100},{name:'小葱',amount:'1根',grams:null},{name:'香油',amount:'几滴',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['番茄顶部划十字，开水烫30秒后去皮，切小块。','少油中火把番茄炒2分钟，炒到出汁变软烂。','加两碗开水，大火烧开再煮2分钟。','转小火，转着圈淋入打散的蛋液，停5秒再轻轻推散，蛋花才大片嫩滑。','加盐调味，撒葱花、滴香油出锅。'],notes:''},
+{id:'b026',lib:true,name:'冬瓜排骨汤',category:'汤羹',time:60,servings:4,calories:380,tags:['滋补','清淡'],
+ ingredients:[{name:'排骨',amount:'500克',grams:500},{name:'冬瓜',amount:'500克',grams:500},{name:'姜',amount:'3片',grams:null},{name:'料酒',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null},{name:'小葱',amount:'1根',grams:null}],
+ steps:['排骨冷水下锅焯水，撇净浮沫，捞出用温水冲净（别用冷水，肉会缩）。','排骨加姜片、1勺料酒和足量开水，大火烧开转小火，盖盖炖40分钟。','冬瓜去皮切成3厘米厚块下锅，再炖15分钟到冬瓜变透明。','加盐调味，撒葱花出锅。'],notes:''},
+{id:'b027',lib:true,name:'玉米排骨汤',category:'汤羹',time:70,servings:4,calories:420,tags:['滋补','清甜'],
+ ingredients:[{name:'排骨',amount:'500克',grams:500},{name:'玉米',amount:'2根',grams:400},{name:'胡萝卜',amount:'1根',grams:150},{name:'姜',amount:'3片',grams:null},{name:'料酒',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['排骨焯水冲净；玉米切段，胡萝卜切滚刀块。','全部食材入砂锅，加足量开水，大火烧开转小火盖盖炖60分钟。','出锅前加盐调味。'],notes:''},
+{id:'b028',lib:true,name:'蒸鸡蛋羹',category:'汤羹',time:15,servings:2,calories:220,tags:['嫩滑','早餐'],
+ ingredients:[{name:'鸡蛋',amount:'3个',grams:150},{name:'温水',amount:'300ml',grams:300},{name:'生抽',amount:'1勺',grams:null},{name:'香油',amount:'几滴',grams:null},{name:'小葱',amount:'1根',grams:null}],
+ steps:['3个鸡蛋加1小撮盐充分打散。','兑入约1.5倍体积的温水（约300毫升，摸着不烫手），搅打均匀。','蛋液过筛倒入蒸碗，撇掉表面小泡，盖保鲜膜并扎几个小孔。','蒸锅水开后放入，中火蒸10分钟，关火焖2分钟再开盖。','淋1勺生抽、几滴香油，撒葱花。'],notes:'温水是蛋羹嫩滑的关键，别用生水。'},
+{id:'b029',lib:true,name:'酸辣汤',category:'汤羹',time:20,servings:3,calories:180,tags:['开胃','酸辣'],
+ ingredients:[{name:'豆腐',amount:'100克',grams:100},{name:'黑木耳',amount:'30克',grams:30},{name:'胡萝卜',amount:'半根',grams:80},{name:'鸡蛋',amount:'1个',grams:50},{name:'香醋',amount:'2勺',grams:null},{name:'白胡椒粉',amount:'少许',grams:null},{name:'淀粉',amount:'2勺',grams:null},{name:'香油',amount:'几滴',grams:null}],
+ steps:['豆腐、泡发的木耳、胡萝卜都切成细丝。','锅中水烧开，下三丝煮2分钟。','加盐、2勺醋、白胡椒粉调味。','转最小火，转圈淋入蛋液，稍凝再推散。','淋2勺水淀粉搅到汤变浓稠，滴香油出锅。'],notes:''},
+{id:'b030',lib:true,name:'香菇鸡汤',category:'汤羹',time:60,servings:3,calories:420,tags:['滋补','暖胃'],
+ ingredients:[{name:'鸡腿',amount:'2个',grams:400},{name:'干香菇',amount:'8朵',grams:40},{name:'红枣',amount:'4颗',grams:null},{name:'姜',amount:'3片',grams:null},{name:'料酒',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['干香菇温水泡发（泡的水留用）；鸡腿剁块焯水。','鸡块入砂锅，倒入澄清的香菇水和其他食材。','大火烧开转小火，盖盖炖50分钟。','加盐调味再煮5分钟。'],notes:'泡香菇的水澄一澄倒进汤里更香。'},
+{id:'b031',lib:true,name:'蛋炒饭',category:'主食',time:10,servings:2,calories:520,tags:['快手','剩饭改造'],
+ ingredients:[{name:'米饭',amount:'2碗',grams:400},{name:'鸡蛋',amount:'2个',grams:100},{name:'火腿肠',amount:'1根',grams:60},{name:'小葱',amount:'2根',grams:null},{name:'盐',amount:'适量',grams:null},{name:'生抽',amount:'半勺',grams:null}],
+ steps:['隔夜米饭提前抓散，确保没有结块。','1个全蛋打散，另1个蛋直接打进米饭里抓匀，让每粒米都裹上蛋液。','大火把锅烧到冒烟再倒油，下米饭不停翻炒3分钟，炒到米粒粒粒分明、在锅里跳。','加火腿丁和盐，翻炒均匀。','撒葱花，沿锅边淋几滴生抽，再翻炒10秒出锅。'],notes:'隔夜饭最佳，新煮的饭摊凉再用。'},
+{id:'b032',lib:true,name:'扬州炒饭',category:'主食',time:15,servings:2,calories:580,tags:['宴客','炒饭'],
+ ingredients:[{name:'米饭',amount:'2碗',grams:400},{name:'鸡蛋',amount:'2个',grams:100},{name:'虾仁',amount:'50克',grams:50},{name:'火腿',amount:'50克',grams:50},{name:'玉米粒',amount:'30克',grams:30},{name:'青豆',amount:'30克',grams:30},{name:'小葱',amount:'2根',grams:null}],
+ steps:['虾仁焯水10秒捞出；鸡蛋打散炒成碎块盛出；配料切小丁。','大火炒米饭2分钟炒散。','下所有配丁炒1分钟，加盐调味。','倒回鸡蛋虾仁，撒葱花炒匀出锅。'],notes:''},
+{id:'b033',lib:true,name:'葱油拌面',category:'主食',time:15,servings:2,calories:560,tags:['快手','面食'],
+ ingredients:[{name:'面条',amount:'300克',grams:300},{name:'小葱',amount:'4根',grams:40},{name:'生抽',amount:'2勺',grams:null},{name:'老抽',amount:'半勺',grams:null},{name:'糖',amount:'半勺',grams:null},{name:'食用油',amount:'3勺',grams:null}],
+ steps:['小葱洗净切6厘米的段。','冷油下葱段，全程小火慢慢炸8-10分钟，炸到葱段焦黄就捞出（炸过头会发苦）。','油里加2勺生抽、半勺老抽、半勺糖和1勺清水，小火煮开成葱油汁。','面条煮至八成熟（中间留一点白芯）捞出。','趁热淋葱油汁拌匀，放上炸脆的葱段。'],notes:''},
+{id:'b034',lib:true,name:'番茄鸡蛋面',category:'主食',time:15,servings:2,calories:480,tags:['快手','暖胃'],
+ ingredients:[{name:'面条',amount:'300克',grams:300},{name:'番茄',amount:'2个',grams:300},{name:'鸡蛋',amount:'2个',grams:100},{name:'小葱',amount:'1根',grams:null},{name:'盐',amount:'适量',grams:null},{name:'生抽',amount:'1勺',grams:null}],
+ steps:['炒散鸡蛋盛出。','番茄去皮切块，中火炒2分钟到出汁变烂。','加两碗开水煮出浓汤，加1勺生抽和盐调味。','另起锅把面煮到八成熟，捞进番茄汤里。','铺上鸡蛋，撒葱花。'],notes:''},
+{id:'b035',lib:true,name:'酸汤水饺',category:'主食',time:15,servings:2,calories:620,tags:['速冻改造','酸辣'],
+ ingredients:[{name:'速冻水饺',amount:'16个',grams:400},{name:'葱花',amount:'少许',grams:null},{name:'蒜末',amount:'1勺',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'香醋',amount:'2勺',grams:null},{name:'辣椒面',amount:'1勺',grams:null},{name:'白芝麻',amount:'1勺',grams:null},{name:'香油',amount:'几滴',grams:null}],
+ steps:['碗中放葱花、蒜末、1勺辣椒面、1勺白芝麻。','烧2勺油到冒烟，浇上去激出香味。','加2勺生抽、2勺香醋、几滴香油，舀2勺热饺子汤冲开成酸汤。','水饺另锅煮熟，连汤带饺捞进碗里，撒香菜。'],notes:''},
+{id:'b036',lib:true,name:'疙瘩汤',category:'主食',time:20,servings:2,calories:420,tags:['暖胃','快手'],
+ ingredients:[{name:'面粉',amount:'150克',grams:150},{name:'番茄',amount:'2个',grams:300},{name:'鸡蛋',amount:'2个',grams:100},{name:'小油菜',amount:'2棵',grams:100},{name:'盐',amount:'适量',grams:null},{name:'香油',amount:'几滴',grams:null}],
+ steps:['面粉放进大碗，水龙头调到最细的水流，边滴边用筷子快速搅成雪花状小面絮。','番茄去皮炒出汁，加开水烧开。','面絮一点点撒进锅里，边撒边推散，煮3分钟到面疙瘩浮起。','转圈淋入蛋液，加青菜碎和盐。','关火滴香油出锅。'],notes:''},
+{id:'b037',lib:true,name:'葱花饼',category:'主食',time:40,servings:3,calories:640,tags:['面食','早餐'],
+ ingredients:[{name:'面粉',amount:'300克',grams:300},{name:'小葱',amount:'3根',grams:30},{name:'盐',amount:'适量',grams:null},{name:'食用油',amount:'适量',grams:null},{name:'花椒粉',amount:'少许',grams:null}],
+ steps:['300克面粉加180毫升温水，揉成偏软的面团，盖湿布醒20分钟。','案板和面团抹油，擀成2毫米厚的大薄片，刷一层油酥，均匀撒盐和葱花。','从一端卷成长条，再盘成螺旋状，收口捏紧朝下，松弛5分钟后擀开成饼。','平底锅少油，中小火每面烙3分钟到两面金黄。','出锅前用锅铲轻轻向中间挤一挤，层次会更好。'],notes:''},
+{id:'b038',lib:true,name:'红烧牛肉面',category:'主食',time:100,servings:3,calories:680,tags:['硬核','面食'],
+ ingredients:[{name:'牛腩',amount:'400克',grams:400},{name:'面条',amount:'400克',grams:400},{name:'番茄',amount:'1个',grams:150},{name:'郫县豆瓣酱',amount:'1勺',grams:null},{name:'姜',amount:'3片',grams:null},{name:'蒜',amount:'3瓣',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'老抽',amount:'1勺',grams:null},{name:'八角',amount:'1个',grams:null},{name:'小油菜',amount:'2棵',grams:100}],
+ steps:['牛腩切成3厘米的块，冷水下锅焯水，撇沫捞出冲净。','炒香1勺豆瓣酱、姜蒜和番茄块，下牛腩翻炒2分钟裹上酱。','加热水没过牛腩两指，放八角，烧开转小火盖盖炖80分钟。','另起锅煮面，烫熟小油菜垫碗底。','面条捞碗，浇上牛肉和汤即可。'],notes:'牛腩一次多做点，汤冻起来下次直接用。'},
+{id:'b039',lib:true,name:'小米粥',category:'早餐',time:30,servings:2,calories:220,tags:['养胃','简单'],
+ ingredients:[{name:'小米',amount:'100克',grams:100},{name:'水',amount:'1000ml',grams:1000},{name:'红枣',amount:'4颗',grams:null}],
+ steps:['小米淘洗2遍，清水浸泡10分钟。','锅中水完全烧开再下米，大火煮开搅一下。','转小火盖盖熬25分钟，期间开盖搅2-3次防止粘底。','熬到表面浮起一层米油、米粒开花即可。'],notes:'水开再下米不容易糊底。'},
+{id:'b040',lib:true,name:'皮蛋瘦肉粥',category:'早餐',time:45,servings:2,calories:380,tags:['经典','咸粥'],
+ ingredients:[{name:'大米',amount:'100克',grams:100},{name:'皮蛋',amount:'2个',grams:120},{name:'猪里脊',amount:'80克',grams:80},{name:'姜',amount:'2片',grams:null},{name:'小葱',amount:'1根',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['大米加水熬成粥底（水米比约10:1）。','里脊切丝用少许盐和淀粉抓一下；皮蛋切丁。','粥里放姜丝、肉丝煮5分钟，再放皮蛋丁煮3分钟。','加盐调味，撒葱花出锅。'],notes:''},
+{id:'b041',lib:true,name:'火腿三明治',category:'早餐',time:10,servings:2,calories:460,tags:['快手','免开火'],
+ ingredients:[{name:'吐司',amount:'4片',grams:120},{name:'火腿片',amount:'4片',grams:60},{name:'鸡蛋',amount:'2个',grams:100},{name:'生菜',amount:'2片',grams:30},{name:'芝士片',amount:'2片',grams:40},{name:'沙拉酱',amount:'适量',grams:null}],
+ steps:['鸡蛋煎成方形蛋饼（或直接用煎蛋）。','一层吐司抹沙拉酱，依次叠生菜、火腿、蛋、芝士，再盖一片吐司。','对角线切开即可；喜欢热乎的可以用平底锅小火压1分钟。'],notes:''},
+{id:'b042',lib:true,name:'牛奶燕麦碗',category:'早餐',time:5,servings:1,calories:380,tags:['免煮','健康'],
+ ingredients:[{name:'燕麦片',amount:'50克',grams:50},{name:'牛奶',amount:'250ml',grams:250},{name:'香蕉',amount:'1根',grams:120},{name:'坚果',amount:'15克',grams:15},{name:'蜂蜜',amount:'少许',grams:null}],
+ steps:['燕麦片放入碗中。','倒入热牛奶或冷藏牛奶泡3分钟（隔夜燕麦则冷藏一夜）。','铺香蕉片、撒坚果碎，淋少许蜂蜜。'],notes:''},
+{id:'b043',lib:true,name:'鸡蛋饼',category:'早餐',time:15,servings:2,calories:420,tags:['快手','面食'],
+ ingredients:[{name:'面粉',amount:'100克',grams:100},{name:'鸡蛋',amount:'2个',grams:100},{name:'小葱',amount:'2根',grams:null},{name:'盐',amount:'适量',grams:null},{name:'水',amount:'150ml',grams:150}],
+ steps:['面粉、鸡蛋、盐和150毫升水搅成能顺滑流动的无颗粒面糊，静置5分钟，拌入葱花。','不粘锅刷薄油，舀1勺面糊倒入，转动锅子摊成圆饼。','中小火烙到底面定型、表面出现小泡后翻面。','再煎30秒到两面微黄，出锅卷菜吃或直接吃。'],notes:'面糊稀一点饼才软。'},
+{id:'b044',lib:true,name:'凉拌木耳',category:'凉菜',time:15,servings:3,calories:110,tags:['爽脆','开胃'],
+ ingredients:[{name:'干木耳',amount:'15克',grams:15},{name:'蒜',amount:'4瓣',grams:null},{name:'小米辣',amount:'2个',grams:null},{name:'香菜',amount:'少许',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'香醋',amount:'2勺',grams:null},{name:'糖',amount:'少许',grams:null},{name:'香油',amount:'1勺',grams:null}],
+ steps:['干木耳冷水泡发2小时，撕小朵；水开焯2分钟，捞出过凉开水。','加蒜末、小米辣圈、香菜段。','加2勺生抽、2勺醋、少许糖、1勺香油。','拌匀冷藏10分钟再吃，更爽脆入味。'],notes:''},
+{id:'b045',lib:true,name:'大拌菜',category:'凉菜',time:15,servings:3,calories:160,tags:['清爽','减脂'],
+ ingredients:[{name:'黄瓜',amount:'1根',grams:200},{name:'番茄',amount:'1个',grams:150},{name:'生菜',amount:'2片',grams:50},{name:'黑木耳',amount:'少许',grams:20},{name:'豆腐丝',amount:'50克',grams:50},{name:'生抽',amount:'2勺',grams:null},{name:'香醋',amount:'1勺',grams:null},{name:'香油',amount:'1勺',grams:null},{name:'蒜',amount:'2瓣',grams:null}],
+ steps:['木耳提前泡发焯水；蔬菜洗净改刀；豆腐丝抖开。','所有食材放进大盆。','加蒜末、2勺生抽、1勺醋、1勺香油。','抓拌均匀装盘。'],notes:''},
+{id:'b046',lib:true,name:'口水鸡',category:'凉菜',time:40,servings:3,calories:420,tags:['凉菜','宴客'],
+ ingredients:[{name:'鸡腿',amount:'2个',grams:400},{name:'姜',amount:'3片',grams:null},{name:'料酒',amount:'1勺',grams:null},{name:'蒜末',amount:'2勺',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'香醋',amount:'1勺',grams:null},{name:'辣椒油',amount:'2勺',grams:null},{name:'花椒粉',amount:'少许',grams:null},{name:'熟芝麻',amount:'1勺',grams:null},{name:'小葱',amount:'2根',grams:null}],
+ steps:['鸡腿冷水下锅，加姜片和1勺料酒，煮15分钟后关火焖5分钟。','捞出立刻泡冰水，凉透后斩成块摆盘。','蒜末、2勺生抽、1勺醋、2勺辣椒油、花椒粉、熟芝麻调成料汁。','料汁浇在鸡块上，撒葱花。'],notes:''},
+{id:'b047',lib:true,name:'冰糖雪梨',category:'甜品',time:40,servings:2,calories:180,tags:['润燥','甜汤'],
+ ingredients:[{name:'雪梨',amount:'2个',grams:500},{name:'冰糖',amount:'20克',grams:20},{name:'枸杞',amount:'少许',grams:null},{name:'红枣',amount:'2颗',grams:null}],
+ steps:['雪梨去皮去核，切成小块。','加没过雪梨的清水、冰糖和红枣，大火烧开。','转小火盖盖炖30分钟。','撒枸杞再煮5分钟即可，温喝冷藏都好。'],notes:''},
+{id:'b048',lib:true,name:'绿豆汤',category:'甜品',time:50,servings:4,calories:260,tags:['消暑','夏季'],
+ ingredients:[{name:'绿豆',amount:'150克',grams:150},{name:'冰糖',amount:'30克',grams:30},{name:'水',amount:'1500ml',grams:1500}],
+ steps:['绿豆洗净，提前浸泡1小时（或冷冻1小时，更容易开花）。','加水大火煮开，转小火盖盖煮40分钟到绿豆开花。','加冰糖搅拌至融化，放凉或冰镇后风味最佳。'],notes:''},
+{id:'b049',lib:true,name:'韭菜炒蛋',category:'家常菜',time:10,servings:2,calories:260,tags:['快手','家常'],
+ ingredients:[{name:'韭菜',amount:'200克',grams:200},{name:'鸡蛋',amount:'3个',grams:150},{name:'盐',amount:'适量',grams:null},{name:'食用油',amount:'适量',grams:null}],
+ steps:['鸡蛋加1小撮盐打散；韭菜洗净切成3厘米的段，沥干水分。','大火热油倒入蛋液，凝固后划成大块盛出。','下韭菜大火炒10秒，炒到微微变软。','倒回鸡蛋，加少许盐，翻匀立刻出锅。'],notes:''},
+{id:'b050',lib:true,name:'洋葱炒牛肉',category:'家常菜',time:15,servings:2,calories:420,tags:['下饭','快手'],
+ ingredients:[{name:'牛肉',amount:'250克',grams:250},{name:'洋葱',amount:'1个',grams:200},{name:'生抽',amount:'1勺',grams:null},{name:'蚝油',amount:'1勺',grams:null},{name:'淀粉',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['牛肉逆纹切薄片，加半勺生抽、1勺淀粉、半勺油抓匀腌10分钟。','洋葱切丝。','大火热油滑炒牛肉约40秒到变色，立刻盛出。','下洋葱丝炒2分钟到半透明。','倒回牛肉，加1勺蚝油和少许盐，大火翻炒20秒出锅。'],notes:'牛肉要大火快炒，久了会老。'},
+{id:'b051',lib:true,name:'肉末茄子',category:'家常菜',time:20,servings:2,calories:380,tags:['下饭','川味'],
+ ingredients:[{name:'茄子',amount:'2根',grams:400},{name:'猪肉末',amount:'80克',grams:80},{name:'郫县豆瓣酱',amount:'1勺',grams:null},{name:'蒜',amount:'3瓣',grams:null},{name:'生抽',amount:'1勺',grams:null},{name:'糖',amount:'半勺',grams:null},{name:'小葱',amount:'1根',grams:null}],
+ steps:['茄子切长条，微波高火2分钟或干锅煸软（省油的关键）。','中火把肉末煸变色，加1勺豆瓣酱和蒜末炒出红油。','下茄子，加1勺生抽、半勺糖。','翻炒均匀焖2分钟入味，撒葱花出锅。'],notes:''},
+{id:'b052',lib:true,name:'家常豆腐',category:'家常菜',time:20,servings:3,calories:320,tags:['下饭','豆制品'],
+ ingredients:[{name:'老豆腐',amount:'400克',grams:400},{name:'青椒',amount:'1个',grams:80},{name:'胡萝卜',amount:'半根',grams:80},{name:'黑木耳',amount:'少许',grams:20},{name:'生抽',amount:'2勺',grams:null},{name:'糖',amount:'半勺',grams:null},{name:'蒜',amount:'2瓣',grams:null},{name:'淀粉',amount:'少许',grams:null}],
+ steps:['老豆腐切成1厘米厚的三角片，中火煎到两面金黄硬壳，盛出。','爆香蒜片，下青椒块、胡萝卜片、木耳炒1分钟。','倒回豆腐，加2勺生抽、半勺糖和小半碗水。','中火焖2分钟，淋水淀粉收汁。'],notes:''},
+{id:'b053',lib:true,name:'蒜蓉空心菜',category:'家常菜',time:8,servings:2,calories:110,tags:['快手','绿叶菜'],
+ ingredients:[{name:'空心菜',amount:'400克',grams:400},{name:'蒜',amount:'5瓣',grams:null},{name:'盐',amount:'适量',grams:null},{name:'食用油',amount:'适量',grams:null}],
+ steps:['空心菜掐成段，叶和梗分开放；蒜剁成蓉，分两份。','大火烧到冒烟再倒油，下一半蒜蓉爆香。','先下菜梗炒20秒，再下菜叶。','加盐和剩下的生蒜蓉，翻匀立刻出锅，全程不超过1分钟。'],notes:'全程大火，炒久会黑。'},
+{id:'b054',lib:true,name:'番茄菜花',category:'家常菜',time:12,servings:2,calories:160,tags:['清淡','家常'],
+ ingredients:[{name:'菜花',amount:'400克',grams:400},{name:'番茄',amount:'1个',grams:150},{name:'蒜',amount:'2瓣',grams:null},{name:'盐',amount:'适量',grams:null},{name:'生抽',amount:'半勺',grams:null}],
+ steps:['菜花掰成小朵，淡盐水泡10分钟洗净。','水开焯水1分钟捞出沥干。','番茄去皮切块，中火炒2分钟出汁。','下菜花翻炒2分钟，加盐和半勺生抽炒匀。'],notes:''},
+{id:'b055',lib:true,name:'芹菜炒香干',category:'家常菜',time:12,servings:2,calories:240,tags:['清爽','快手'],
+ ingredients:[{name:'芹菜',amount:'250克',grams:250},{name:'香干',amount:'150克',grams:150},{name:'蒜',amount:'2瓣',grams:null},{name:'生抽',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['芹菜撕去老筋切段；香干切条。','水开焯芹菜30秒捞出。','热油煎香干到两面微黄。','下芹菜大火炒1分钟，加1勺生抽、少许盐翻匀。'],notes:''},
+{id:'b056',lib:true,name:'西葫芦炒蛋',category:'家常菜',time:10,servings:2,calories:220,tags:['快手','清淡'],
+ ingredients:[{name:'西葫芦',amount:'1根',grams:300},{name:'鸡蛋',amount:'2个',grams:100},{name:'蒜',amount:'2瓣',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['西葫芦切半圆片；鸡蛋打散。','热油炒散鸡蛋盛出。','爆香蒜片，下西葫芦中火炒2分钟到变软。','倒回鸡蛋，加盐翻匀出锅。'],notes:''},
+{id:'b057',lib:true,name:'干锅花菜',category:'家常菜',time:20,servings:2,calories:340,tags:['下饭','湘味'],
+ ingredients:[{name:'菜花',amount:'400克',grams:400},{name:'五花肉',amount:'80克',grams:80},{name:'郫县豆瓣酱',amount:'1勺',grams:null},{name:'蒜',amount:'3瓣',grams:null},{name:'干辣椒',amount:'3个',grams:null},{name:'生抽',amount:'1勺',grams:null}],
+ steps:['菜花掰小朵，淡盐水泡10分钟后彻底沥干。','中火煸五花肉片3分钟出油，肉片微卷。','下1勺豆瓣酱、蒜末、干辣椒段，小火炒出红油。','下菜花转中火，盖盖干焗5分钟，中途开盖翻两次。','加1勺生抽翻匀出锅。'],notes:''},
+{id:'b058',lib:true,name:'尖椒土豆片',category:'家常菜',time:12,servings:2,calories:240,tags:['快手','下饭'],
+ ingredients:[{name:'土豆',amount:'2个',grams:400},{name:'尖椒',amount:'2个',grams:100},{name:'蒜',amount:'2瓣',grams:null},{name:'生抽',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['土豆切3毫米厚片，泡水去淀粉。','热油中火煎土豆片4分钟，到两面金黄、边缘焦脆。','下尖椒块、蒜片大火炒1分钟。','加1勺生抽、少许盐翻匀出锅。'],notes:''},
+{id:'b059',lib:true,name:'冬瓜炒虾皮',category:'家常菜',time:10,servings:2,calories:120,tags:['快手','清淡'],
+ ingredients:[{name:'冬瓜',amount:'400克',grams:400},{name:'虾皮',amount:'10克',grams:10},{name:'蒜',amount:'2瓣',grams:null},{name:'盐',amount:'适量',grams:null},{name:'小葱',amount:'1根',grams:null}],
+ steps:['冬瓜去皮去瓤，切成3毫米薄片。','热油小火爆香蒜片和虾皮。','下冬瓜中火炒3分钟到半透明变软。','加少许盐（虾皮有咸味），撒葱花出锅。'],notes:'虾皮有咸味，盐少放。'},
+{id:'b060',lib:true,name:'苦瓜炒蛋',category:'家常菜',time:10,servings:2,calories:200,tags:['清热','家常'],
+ ingredients:[{name:'苦瓜',amount:'1根',grams:250},{name:'鸡蛋',amount:'2个',grams:100},{name:'盐',amount:'适量',grams:null},{name:'食用油',amount:'适量',grams:null}],
+ steps:['苦瓜对半剖开，用勺子刮净白瓤，切薄片。','加半勺盐抓腌5分钟，挤掉苦水。','炒散鸡蛋盛出。','下苦瓜炒1分钟，倒回鸡蛋，加盐翻炒均匀。'],notes:''},
+{id:'b061',lib:true,name:'糖醋里脊',category:'荤菜',time:30,servings:3,calories:520,tags:['糖醋','孩子爱吃'],
+ ingredients:[{name:'猪里脊',amount:'300克',grams:300},{name:'番茄酱',amount:'3勺',grams:null},{name:'糖',amount:'2勺',grams:null},{name:'白醋',amount:'2勺',grams:null},{name:'淀粉',amount:'适量',grams:null},{name:'鸡蛋',amount:'1个',grams:50},{name:'白芝麻',amount:'少许',grams:null}],
+ steps:['里脊切成1厘米粗的条，加盐、料酒和一个蛋清、淀粉抓匀，腌15分钟。','油烧至六成热（木筷插入冒密泡），逐条下锅炸3分钟定型捞出。','油温升到八成热，复炸40秒到金黄酥脆。','3勺番茄酱、2勺糖、2勺白醋、半碗水淀粉调成糖醋汁，入锅煮到浓稠冒大泡。','倒入里脊条快速裹匀，撒白芝麻出锅。'],notes:'复炸是外酥里嫩的关键。'},
+{id:'b062',lib:true,name:'水煮肉片',category:'荤菜',time:30,servings:3,calories:480,tags:['川菜','下饭'],
+ ingredients:[{name:'猪里脊',amount:'300克',grams:300},{name:'豆芽',amount:'150克',grams:150},{name:'青菜',amount:'2棵',grams:150},{name:'郫县豆瓣酱',amount:'2勺',grams:null},{name:'干辣椒',amount:'6个',grams:null},{name:'花椒',amount:'少许',grams:null},{name:'蒜',amount:'3瓣',grams:null},{name:'姜',amount:'2片',grams:null},{name:'淀粉',amount:'1勺',grams:null}],
+ steps:['里脊切薄片，加盐、料酒、1勺淀粉和1勺蛋清抓匀腌15分钟。','豆芽、青菜焯熟铺在大碗底。','炒香2勺豆瓣酱、姜蒜末出红油，加两碗水烧开。','最小火下肉片，定型后再推散，煮1分钟连汤倒进碗里。','肉片上铺干辣椒段、花椒、蒜末，烧2勺热油浇上去激香。'],notes:''},
+{id:'b063',lib:true,name:'黄焖鸡',category:'荤菜',time:40,servings:3,calories:520,tags:['下饭','一锅出'],
+ ingredients:[{name:'鸡腿',amount:'2个',grams:400},{name:'干香菇',amount:'6朵',grams:30},{name:'青椒',amount:'1个',grams:80},{name:'土豆',amount:'1个',grams:200},{name:'生抽',amount:'2勺',grams:null},{name:'老抽',amount:'半勺',grams:null},{name:'蚝油',amount:'1勺',grams:null},{name:'姜',amount:'3片',grams:null},{name:'料酒',amount:'1勺',grams:null}],
+ steps:['鸡腿剁块焯水；干香菇泡发切片（泡香菇的水留用）；土豆切滚刀块。','爆香姜片，中火炒鸡块3分钟到表面微黄。','加生抽、老抽、蚝油、料酒和香菇水，烧开焖15分钟。','下土豆再焖10分钟，最后加青椒块炒1分钟收汁。'],notes:''},
+{id:'b064',lib:true,name:'辣子鸡',category:'荤菜',time:35,servings:3,calories:560,tags:['川菜','下酒'],
+ ingredients:[{name:'鸡腿',amount:'2个',grams:400},{name:'干辣椒',amount:'50克',grams:50},{name:'花椒',amount:'少许',grams:null},{name:'姜',amount:'3片',grams:null},{name:'蒜',amount:'3瓣',grams:null},{name:'熟芝麻',amount:'1勺',grams:null},{name:'生抽',amount:'1勺',grams:null},{name:'料酒',amount:'1勺',grams:null},{name:'淀粉',amount:'1勺',grams:null}],
+ steps:['鸡腿斩成2厘米的小块，加生抽、料酒、淀粉腌15分钟。','油烧至七成热，炸鸡块4分钟到外壳酥脆，捞出。','锅留底油，小火下姜蒜、干辣椒段和花椒炒香，别炒糊。','倒回鸡块大火翻炒1分钟，撒熟芝麻出锅。'],notes:''},
+{id:'b065',lib:true,name:'孜然羊肉',category:'荤菜',time:20,servings:2,calories:480,tags:['西北','下酒'],
+ ingredients:[{name:'羊肉',amount:'300克',grams:300},{name:'洋葱',amount:'半个',grams:100},{name:'孜然粉',amount:'2勺',grams:null},{name:'辣椒面',amount:'1勺',grams:null},{name:'白芝麻',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null},{name:'姜',amount:'2片',grams:null}],
+ steps:['羊肉切薄片，加姜丝、半勺料酒和少许油腌10分钟。','大火热油下羊肉，快速滑炒1分钟到变色。','下洋葱丝炒30秒。','撒2勺孜然粉、1勺辣椒面、少许盐和白芝麻，翻匀立刻出锅。'],notes:''},
+{id:'b066',lib:true,name:'椒盐虾',category:'荤菜',time:15,servings:2,calories:300,tags:['海鲜','下酒'],
+ ingredients:[{name:'鲜虾',amount:'400克',grams:400},{name:'蒜',amount:'4瓣',grams:null},{name:'小米辣',amount:'2个',grams:null},{name:'椒盐粉',amount:'1勺',grams:null},{name:'小葱',amount:'2根',grams:null},{name:'淀粉',amount:'少许',grams:null}],
+ steps:['鲜虾剪去虾须，从背部开一刀去虾线，拍薄淀粉。','油烧至七成热，炸虾1分钟到壳变红酥脆，捞出。','锅留底油，爆香蒜末和小米辣。','倒回虾，撒1勺椒盐粉和葱花，快速翻匀。'],notes:''},
+{id:'b067',lib:true,name:'蒜蓉粉丝蒸虾',category:'荤菜',time:25,servings:2,calories:320,tags:['宴客','清淡'],
+ ingredients:[{name:'鲜虾',amount:'8只',grams:400},{name:'粉丝',amount:'1把',grams:50},{name:'蒜',amount:'1头',grams:40},{name:'蒸鱼豉油',amount:'2勺',grams:null},{name:'小葱',amount:'2根',grams:null},{name:'食用油',amount:'2勺',grams:null}],
+ steps:['粉丝温水泡软，铺在盘底；虾从背部剖开（不切断），摆在粉丝上。','2/3的蒜蓉用油小火炸到金黄，拌入生蒜蓉和少许盐，铺在虾背上。','水开后上锅大火蒸6分钟。','出锅撒葱花，淋2勺蒸鱼豉油，再浇1勺热油。'],notes:''},
+{id:'b068',lib:true,name:'咖喱鸡肉',category:'荤菜',time:35,servings:3,calories:520,tags:['一锅出','下饭'],
+ ingredients:[{name:'鸡腿肉',amount:'300克',grams:300},{name:'土豆',amount:'1个',grams:200},{name:'胡萝卜',amount:'1根',grams:150},{name:'洋葱',amount:'半个',grams:100},{name:'咖喱块',amount:'3块',grams:100},{name:'牛奶',amount:'100ml',grams:100}],
+ steps:['鸡腿肉切块，土豆、胡萝卜切滚刀块，洋葱切片。','炒香洋葱2分钟，下鸡肉炒到变色。','加土豆胡萝卜和热水没过食材，煮15分钟。','关火放3块咖喱搅化，再开小火加100毫升牛奶煮5分钟到浓稠。'],notes:'咖喱块关火再放，不然容易糊底。'},
+{id:'b069',lib:true,name:'红烧狮子头',category:'荤菜',time:50,servings:4,calories:560,tags:['硬菜','宴客'],
+ ingredients:[{name:'猪肉末',amount:'400克',grams:400},{name:'莲藕',amount:'80克',grams:80},{name:'鸡蛋',amount:'1个',grams:50},{name:'淀粉',amount:'2勺',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'老抽',amount:'半勺',grams:null},{name:'姜',amount:'2片',grams:null},{name:'小油菜',amount:'4棵',grams:200}],
+ steps:['猪肉末加姜末、藕碎、蛋清、1勺淀粉、1勺生抽，顺一个方向搅打上劲。','团成拳头大的丸子，油烧至五成热，中火煎6分钟到各面定型金黄。','加1碗水、生抽、老抽，小火盖盖焖25分钟。','小油菜焯水垫盘，狮子头收汁摆上，浇汁。'],notes:''},
+{id:'b070',lib:true,name:'香煎鸡排',category:'荤菜',time:20,servings:2,calories:380,tags:['减脂','快手'],
+ ingredients:[{name:'鸡胸肉',amount:'2块',grams:350},{name:'生抽',amount:'1勺',grams:null},{name:'蚝油',amount:'1勺',grams:null},{name:'蒜',amount:'2瓣',grams:null},{name:'黑胡椒',amount:'适量',grams:null},{name:'蜂蜜',amount:'半勺',grams:null}],
+ steps:['鸡胸从侧面片成两片，用刀背拍松两面。','加1勺生抽、1勺蚝油、蒜末、黑胡椒和半勺蜂蜜，腌20分钟。','平底锅少油，中火每面煎3分钟到熟透、两面金黄。','静置2分钟再切，肉汁不流失。'],notes:''},
+{id:'b071',lib:true,name:'卤鸡腿',category:'荤菜',time:45,servings:4,calories:480,tags:['卤味','懒人'],
+ ingredients:[{name:'鸡腿',amount:'4个',grams:600},{name:'生抽',amount:'3勺',grams:null},{name:'老抽',amount:'1勺',grams:null},{name:'冰糖',amount:'15克',grams:15},{name:'八角',amount:'1个',grams:null},{name:'桂皮',amount:'1小段',grams:null},{name:'香叶',amount:'2片',grams:null},{name:'姜',amount:'3片',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['鸡腿焯水冲净。','锅中加水、3勺生抽、1勺老抽、冰糖、八角、桂皮、香叶、姜和1小勺盐，烧开。','放鸡腿小火卤30分钟，关火再泡20分钟更入味。','吃时斩块，浇一点卤汁。'],notes:'卤汁别倒，留着下次就是老卤。'},
+{id:'b072',lib:true,name:'手撕包菜',category:'素菜',time:10,servings:2,calories:140,tags:['快手','下饭'],
+ ingredients:[{name:'包菜',amount:'半棵',grams:400},{name:'蒜',amount:'3瓣',grams:null},{name:'干辣椒',amount:'3个',grams:null},{name:'花椒',amount:'少许',grams:null},{name:'生抽',amount:'1勺',grams:null},{name:'香醋',amount:'1勺',grams:null}],
+ steps:['包菜手撕成大片，梗和叶分开；蒜切片。','大火热油，爆香蒜片、干辣椒、花椒。','先下菜梗炒30秒，再下菜叶大火炒1分钟。','沿锅边淋1勺生抽、1勺醋，翻匀立刻出锅。'],notes:''},
+{id:'b073',lib:true,name:'番茄烧豆腐',category:'素菜',time:15,servings:2,calories:280,tags:['清淡','下饭'],
+ ingredients:[{name:'老豆腐',amount:'400克',grams:400},{name:'番茄',amount:'2个',grams:300},{name:'蒜',amount:'2瓣',grams:null},{name:'生抽',amount:'1勺',grams:null},{name:'糖',amount:'半勺',grams:null},{name:'小葱',amount:'1根',grams:null}],
+ steps:['老豆腐切块，中火煎到两面金黄，盛出。','番茄去皮切块，炒2分钟出浓汁。','倒回豆腐，加1勺生抽、半勺糖和小半碗水。','中火焖3分钟收汁，撒葱花。'],notes:''},
+{id:'b074',lib:true,name:'红烧冬瓜',category:'素菜',time:12,servings:2,calories:130,tags:['清淡','快手'],
+ ingredients:[{name:'冬瓜',amount:'500克',grams:500},{name:'蒜',amount:'3瓣',grams:null},{name:'生抽',amount:'1勺',grams:null},{name:'老抽',amount:'几滴',grams:null},{name:'糖',amount:'少许',grams:null},{name:'小葱',amount:'1根',grams:null}],
+ steps:['冬瓜去皮去瓤，切成1厘米厚的大片，在表面打十字花刀（更入味）。','少油中火煎冬瓜3分钟到两面微黄。','加蒜末、1勺生抽、几滴老抽、少许糖和小半碗水。','盖盖焖3分钟到冬瓜透明，撒葱花收汁。'],notes:''},
+{id:'b075',lib:true,name:'蒜蓉丝瓜',category:'素菜',time:10,servings:2,calories:110,tags:['清淡','夏季'],
+ ingredients:[{name:'丝瓜',amount:'2根',grams:400},{name:'蒜',amount:'1头',grams:40},{name:'盐',amount:'适量',grams:null},{name:'小葱',amount:'1根',grams:null}],
+ steps:['丝瓜刮皮，切滚刀块。','热油爆香2/3的蒜蓉。','下丝瓜中火炒2分钟到变软出汁。','加盐调味，关火前拌入剩余的生蒜蓉和葱花。'],notes:''},
+{id:'b076',lib:true,name:'荷塘小炒',category:'素菜',time:12,servings:2,calories:160,tags:['清爽','宴客'],
+ ingredients:[{name:'莲藕',amount:'1节',grams:250},{name:'胡萝卜',amount:'半根',grams:80},{name:'黑木耳',amount:'少许',grams:20},{name:'荷兰豆',amount:'100克',grams:100},{name:'蒜',amount:'2瓣',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['莲藕去皮切薄片泡水；木耳泡发；荷兰豆去筋。','全部食材沸水焯30秒，立刻过凉水（保持脆嫩）。','大火热油爆香蒜片。','下所有食材大火炒1分钟，加盐翻匀出锅。'],notes:''},
+{id:'b077',lib:true,name:'香煎豆腐',category:'素菜',time:15,servings:2,calories:300,tags:['豆制品','快手'],
+ ingredients:[{name:'老豆腐',amount:'400克',grams:400},{name:'蒜',amount:'2瓣',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'糖',amount:'少许',grams:null},{name:'小葱',amount:'1根',grams:null},{name:'白芝麻',amount:'少许',grams:null}],
+ steps:['老豆腐切1厘米厚片，用厨房纸吸干水分。','中小火煎6分钟，到两面金黄起硬壳。','加2勺生抽、少许糖、蒜末和2勺清水。','小火烧到汤汁收干，撒葱花和白芝麻。'],notes:''},
+{id:'b078',lib:true,name:'蚝油杏鲍菇',category:'素菜',time:12,servings:2,calories:180,tags:['快手','下饭'],
+ ingredients:[{name:'杏鲍菇',amount:'2根',grams:300},{name:'蚝油',amount:'2勺',grams:null},{name:'蒜',amount:'3瓣',grams:null},{name:'生抽',amount:'半勺',grams:null},{name:'小葱',amount:'1根',grams:null}],
+ steps:['杏鲍菇撕成条（手撕比刀切更入味）。','干锅中火煸5分钟，把水分煸出来、边缘焦黄。','加1勺油、蒜末翻炒1分钟。','加2勺蚝油、半勺生抽，撒葱花翻匀。'],notes:''},
+{id:'b079',lib:true,name:'油焖笋',category:'素菜',time:20,servings:2,calories:200,tags:['时令','江南'],
+ ingredients:[{name:'春笋',amount:'500克',grams:500},{name:'生抽',amount:'2勺',grams:null},{name:'糖',amount:'1勺',grams:null},{name:'食用油',amount:'2勺',grams:null},{name:'小葱',amount:'1根',grams:null}],
+ steps:['春笋剥壳切滚刀块，冷水下锅焯5分钟去涩。','油稍多，中小火把笋煸4分钟到边缘微黄。','加2勺生抽、1勺糖和小半碗水。','盖盖焖8分钟，大火收汁撒葱花。'],notes:''},
+{id:'b080',lib:true,name:'海带豆腐汤',category:'汤羹',time:25,servings:2,calories:180,tags:['清淡','低卡'],
+ ingredients:[{name:'海带结',amount:'200克',grams:200},{name:'豆腐',amount:'300克',grams:300},{name:'姜',amount:'2片',grams:null},{name:'盐',amount:'适量',grams:null},{name:'香油',amount:'几滴',grams:null}],
+ steps:['海带结冲洗干净；豆腐切块。','水开放姜片和海带，中火煮10分钟。','下豆腐再煮5分钟。','加盐，滴几滴香油出锅。'],notes:''},
+{id:'b081',lib:true,name:'冬瓜丸子汤',category:'汤羹',time:25,servings:3,calories:320,tags:['家常','清淡'],
+ ingredients:[{name:'猪肉末',amount:'200克',grams:200},{name:'冬瓜',amount:'400克',grams:400},{name:'蛋清',amount:'1个',grams:null},{name:'淀粉',amount:'1勺',grams:null},{name:'姜',amount:'2片',grams:null},{name:'盐',amount:'适量',grams:null},{name:'小葱',amount:'1根',grams:null}],
+ steps:['肉末加蛋清、1勺淀粉、姜末和盐，顺一个方向搅打上劲。','冬瓜切厚片，水开先下冬瓜煮2分钟。','转小火，用勺子把肉馅挖成丸子下锅，全部定型后再开中火。','煮5分钟到丸子浮起，加盐撒葱花。'],notes:''},
+{id:'b082',lib:true,name:'莲藕排骨汤',category:'汤羹',time:80,servings:4,calories:460,tags:['滋补','湖北'],
+ ingredients:[{name:'排骨',amount:'500克',grams:500},{name:'莲藕',amount:'2节',grams:500},{name:'姜',amount:'3片',grams:null},{name:'料酒',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['排骨焯水；莲藕去皮切滚刀块。','全部入砂锅加足量开水，大火烧开转小火盖盖炖70分钟。','加盐调味，撒葱花。'],notes:'粉藕选七孔藕，汤更糯。'},
+{id:'b083',lib:true,name:'山药鸡汤',category:'汤羹',time:70,servings:4,calories:440,tags:['滋补','养胃'],
+ ingredients:[{name:'鸡',amount:'半只',grams:600},{name:'山药',amount:'300克',grams:300},{name:'红枣',amount:'4颗',grams:null},{name:'姜',amount:'3片',grams:null},{name:'料酒',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['鸡块焯水；山药去皮切段泡在清水里防黑。','鸡块加姜片和开水，大火烧开小火炖40分钟。','下山药和红枣再炖20分钟。','加盐调味出锅。'],notes:''},
+{id:'b084',lib:true,name:'丝瓜蛋汤',category:'汤羹',time:10,servings:2,calories:140,tags:['快手','清淡'],
+ ingredients:[{name:'丝瓜',amount:'1根',grams:300},{name:'鸡蛋',amount:'2个',grams:100},{name:'盐',amount:'适量',grams:null},{name:'香油',amount:'几滴',grams:null},{name:'小葱',amount:'1根',grams:null}],
+ steps:['丝瓜刮皮切滚刀块。','少油中火炒丝瓜2分钟到半透明。','加两碗水烧开煮2分钟。','转圈淋蛋液，加盐，滴香油出锅。'],notes:''},
+{id:'b085',lib:true,name:'罗宋汤',category:'汤羹',time:100,servings:4,calories:480,tags:['西式','浓郁'],
+ ingredients:[{name:'牛腩',amount:'300克',grams:300},{name:'番茄',amount:'2个',grams:300},{name:'土豆',amount:'1个',grams:200},{name:'胡萝卜',amount:'1根',grams:150},{name:'洋葱',amount:'半个',grams:100},{name:'卷心菜',amount:'2片',grams:100},{name:'番茄酱',amount:'2勺',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['牛腩切块焯水；番茄去皮切块；土豆胡萝卜洋葱切滚刀块。','炒香洋葱和番茄2分钟，加2勺番茄酱炒出红油。','下牛腩翻炒，加热水和牛肉汤没过食材。','大火烧开小火炖80分钟，下土豆胡萝卜再炖20分钟。','加盐调味，卷心菜撕块再煮5分钟。'],notes:''},
+{id:'b086',lib:true,name:'萝卜丝鲫鱼汤',category:'汤羹',time:35,servings:3,calories:320,tags:['奶白','滋补'],
+ ingredients:[{name:'鲫鱼',amount:'1条',grams:400},{name:'白萝卜',amount:'半根',grams:300},{name:'姜',amount:'3片',grams:null},{name:'料酒',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null},{name:'小葱',amount:'1根',grams:null}],
+ steps:['鲫鱼去鳞去鳃洗净，擦干水分（防溅油）。','中火把鱼两面各煎3分钟到金黄。','冲入开水，大火滚10分钟，汤色才会奶白。','下萝卜丝再煮8分钟，加盐撒葱花。'],notes:'煎透加开水大火滚，是汤白的秘诀。'},
+{id:'b087',lib:true,name:'番茄牛腩汤',category:'汤羹',time:110,servings:4,calories:520,tags:['浓郁','硬汤'],
+ ingredients:[{name:'牛腩',amount:'400克',grams:400},{name:'番茄',amount:'3个',grams:450},{name:'洋葱',amount:'半个',grams:100},{name:'姜',amount:'3片',grams:null},{name:'番茄酱',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['牛腩切块焯水；番茄去皮切块。','炒香洋葱、2个番茄和1勺番茄酱，炒到番茄化泥。','下牛腩翻炒，加热水没过，小火炖90分钟。','加盐调味，喜欢浓一点就多收一会儿汁。'],notes:''},
+{id:'b088',lib:true,name:'炸酱面',category:'主食',time:30,servings:3,calories:680,tags:['面食','北京'],
+ ingredients:[{name:'面条',amount:'400克',grams:400},{name:'猪肉末',amount:'150克',grams:150},{name:'甜面酱',amount:'2勺',grams:null},{name:'黄豆酱',amount:'2勺',grams:null},{name:'黄瓜',amount:'1根',grams:200},{name:'豆芽',amount:'100克',grams:100},{name:'小葱',amount:'2根',grams:null}],
+ steps:['黄豆酱、甜面酱各2勺，加半碗水澥开。','小火把五花肉末煸出油、微微焦黄，加葱花。','倒入调好的酱，小火咕嘟8分钟，期间搅几次防粘，炸到油酱分离。','黄瓜切丝、豆芽焯熟做菜码。','面条煮熟过水，码菜浇炸酱拌匀。'],notes:''},
+{id:'b089',lib:true,name:'麻酱凉面',category:'主食',time:15,servings:2,calories:560,tags:['夏季','面食'],
+ ingredients:[{name:'面条',amount:'300克',grams:300},{name:'芝麻酱',amount:'2勺',grams:null},{name:'黄瓜',amount:'1根',grams:200},{name:'蒜',amount:'2瓣',grams:null},{name:'生抽',amount:'1勺',grams:null},{name:'香醋',amount:'1勺',grams:null},{name:'糖',amount:'少许',grams:null},{name:'辣椒油',amount:'1勺',grams:null}],
+ steps:['芝麻酱2勺加温水少量多次澥开，加蒜末、1勺生抽、1勺醋、少许糖调匀。','面条煮熟，过凉开水，拌半勺油防粘。','黄瓜擦丝码在面上。','浇麻酱汁和辣椒油，吃前拌匀。'],notes:''},
+{id:'b090',lib:true,name:'韭菜盒子',category:'主食',time:50,servings:3,calories:620,tags:['面食','家常'],
+ ingredients:[{name:'面粉',amount:'300克',grams:300},{name:'韭菜',amount:'250克',grams:250},{name:'鸡蛋',amount:'3个',grams:150},{name:'虾皮',amount:'少许',grams:null},{name:'香油',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null},{name:'食用油',amount:'适量',grams:null}],
+ steps:['300克面粉加160毫升热水烫面，揉匀盖湿布醒20分钟。','鸡蛋炒散；韭菜切段加1勺香油拌匀锁水，再拌入鸡蛋、虾皮和盐。','面团分成剂子，擀成圆片，包入馅料对折捏紧。','平底锅少油，小火每面烙3分钟到金黄，鼓起即熟。'],notes:''},
+{id:'b091',lib:true,name:'猪肉白菜水饺',category:'主食',time:80,servings:4,calories:720,tags:['面食','北方'],
+ ingredients:[{name:'面粉',amount:'400克',grams:400},{name:'猪肉末',amount:'300克',grams:300},{name:'白菜',amount:'300克',grams:300},{name:'姜',amount:'2片',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'香油',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['面粉加200毫升温水和成面团，醒30分钟。','肉末加姜末、生抽、盐、香油顺一个方向搅上劲，拌入挤干水分的白菜碎。','面团搓条切剂，擀成中间厚边缘薄的皮，包馅捏紧。','水开下饺，用勺背推散，沸腾后点2次凉水，饺子浮起鼓胀即熟。'],notes:''},
+{id:'b092',lib:true,name:'鲜肉馄饨',category:'主食',time:40,servings:3,calories:560,tags:['快手','汤面'],
+ ingredients:[{name:'馄饨皮',amount:'40张',grams:300},{name:'猪肉末',amount:'250克',grams:250},{name:'虾皮',amount:'少许',grams:null},{name:'紫菜',amount:'少许',grams:null},{name:'小葱',amount:'2根',grams:null},{name:'生抽',amount:'1勺',grams:null},{name:'香油',amount:'几滴',grams:null},{name:'香菜',amount:'少许',grams:null}],
+ steps:['肉末加姜末、1勺生抽、盐和少许水搅打上劲。','馄饨皮包入适量肉馅，随意捏合不露馅即可。','碗底放虾皮、紫菜、葱花、1勺生抽、几滴香油。','水开下馄饨，煮至浮起再煮1分钟。','先舀汤冲开调料，再捞馄饨入碗。'],notes:''},
+{id:'b093',lib:true,name:'腊肠焖饭',category:'主食',time:40,servings:3,calories:640,tags:['一锅出','懒人'],
+ ingredients:[{name:'大米',amount:'2杯',grams:300},{name:'腊肠',amount:'2根',grams:120},{name:'香菇',amount:'4朵',grams:100},{name:'青豆',amount:'50克',grams:50},{name:'生抽',amount:'1勺',grams:null},{name:'蚝油',amount:'1勺',grams:null}],
+ steps:['大米淘洗加水（比平时煮饭略少）。','腊肠切片、香菇泡发切片，铺在米上，按正常煮饭程序。','跳闸后淋1勺生抽、1勺蚝油。','焖5分钟拌匀，撒葱花。'],notes:''},
+{id:'b094',lib:true,name:'香菇滑鸡饭',category:'主食',time:45,servings:3,calories:600,tags:['一锅出','粤式'],
+ ingredients:[{name:'大米',amount:'2杯',grams:300},{name:'鸡腿肉',amount:'250克',grams:250},{name:'香菇',amount:'6朵',grams:150},{name:'姜',amount:'3片',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'蚝油',amount:'1勺',grams:null},{name:'淀粉',amount:'1勺',grams:null}],
+ steps:['鸡腿肉切块，加2勺生抽、1勺蚝油、1勺淀粉和姜丝腌15分钟。','香菇泡发切片，与腌好的鸡肉一起铺在洗好的米上。','按煮饭键，跳闸后焖10分钟。','开盖拌匀，喜辣的可淋一点辣椒油。'],notes:''},
+{id:'b095',lib:true,name:'土豆丝卷饼',category:'主食',time:40,servings:2,calories:560,tags:['面食','家常'],
+ ingredients:[{name:'面粉',amount:'250克',grams:250},{name:'土豆',amount:'2个',grams:400},{name:'尖椒',amount:'1个',grams:80},{name:'蒜',amount:'2瓣',grams:null},{name:'生抽',amount:'1勺',grams:null},{name:'盐',amount:'适量',grams:null}],
+ steps:['面粉加140毫升温水和成面团，醒20分钟。','土豆切丝按酸辣土豆丝的做法炒好（稍多留点汁）。','面团分成剂子，两个剂子中间刷油叠起来，擀成薄饼。','小火烙到两面微鼓起，从中间揭开成两张，卷入土豆丝。'],notes:''},
+{id:'b096',lib:true,name:'炒河粉',category:'主食',time:15,servings:2,calories:560,tags:['粤式','快手'],
+ ingredients:[{name:'河粉',amount:'400克',grams:400},{name:'牛肉',amount:'150克',grams:150},{name:'绿豆芽',amount:'100克',grams:100},{name:'韭菜',amount:'100克',grams:100},{name:'生抽',amount:'1勺',grams:null},{name:'老抽',amount:'半勺',grams:null}],
+ steps:['牛肉切条用生抽淀粉腌10分钟；河粉抖散；豆芽韭菜洗净。','大火滑炒牛肉到变色盛出。','下豆芽韭菜炒30秒。','下河粉，加1勺生抽、半勺老抽，用筷子和锅铲配合挑匀（别用铲子压，会碎）。','倒回牛肉翻炒30秒出锅。'],notes:'河粉别用锅铲猛压，会碎。'},
+{id:'b097',lib:true,name:'紫菜包饭',category:'主食',time:40,servings:2,calories:620,tags:['韩式','便当'],
+ ingredients:[{name:'米饭',amount:'2碗',grams:400},{name:'烤紫菜',amount:'4张',grams:null},{name:'鸡蛋',amount:'2个',grams:100},{name:'黄瓜',amount:'1根',grams:200},{name:'胡萝卜',amount:'半根',grams:80},{name:'火腿肠',amount:'1根',grams:60},{name:'白糖',amount:'1勺',grams:null},{name:'白醋',amount:'1勺',grams:null},{name:'沙拉酱',amount:'适量',grams:null}],
+ steps:['热米饭拌入1勺白糖、1勺白醋，放凉。','鸡蛋摊成蛋饼切条；黄瓜、胡萝卜、火腿切长条（胡萝卜焯软）。','竹帘铺烤紫菜，均匀铺米饭，靠下端摆料挤沙拉酱。','从下往上卷紧，静置2分钟再切段，刀上抹水好切。'],notes:''},
+{id:'b098',lib:true,name:'茶叶蛋',category:'早餐',time:60,servings:8,calories:90,tags:['煮蛋','入味'],
+ ingredients:[{name:'鸡蛋',amount:'8个',grams:400},{name:'红茶包',amount:'2包',grams:null},{name:'生抽',amount:'3勺',grams:null},{name:'老抽',amount:'1勺',grams:null},{name:'八角',amount:'1个',grams:null},{name:'桂皮',amount:'1小段',grams:null},{name:'冰糖',amount:'10克',grams:10},{name:'盐',amount:'1勺',grams:null}],
+ steps:['鸡蛋冷水下锅，煮8分钟捞出。','轻轻敲裂蛋壳（裂纹均匀才入味好看）。','加水没过鸡蛋，放红茶包、生抽、老抽、冰糖、八角、桂皮和1勺盐。','小火煮20分钟，关火连汤泡2小时以上，隔夜更入味。'],notes:'泡一夜更入味。'},
+{id:'b099',lib:true,name:'八宝粥',category:'早餐',time:90,servings:4,calories:320,tags:['杂粮','养胃'],
+ ingredients:[{name:'大米',amount:'50克',grams:50},{name:'红豆',amount:'30克',grams:30},{name:'花生',amount:'30克',grams:30},{name:'莲子',amount:'20克',grams:20},{name:'红枣',amount:'6颗',grams:null},{name:'桂圆',amount:'10克',grams:10},{name:'冰糖',amount:'30克',grams:30},{name:'水',amount:'1500ml',grams:1500}],
+ steps:['红豆、花生提前泡2小时（或冷藏过夜）。','所有食材加水，大火烧开转小火。','盖盖熬80分钟，期间搅几次。','粥稠加冰糖搅化。'],notes:''},
+{id:'b100',lib:true,name:'南瓜粥',category:'早餐',time:35,servings:3,calories:220,tags:['养胃','清甜'],
+ ingredients:[{name:'南瓜',amount:'300克',grams:300},{name:'大米',amount:'80克',grams:80},{name:'水',amount:'1200ml',grams:1200}],
+ steps:['南瓜去皮切小块。','大米洗净加水，烧开下南瓜。','小火熬30分钟，到南瓜化在粥里。','喜甜的可加少许冰糖。'],notes:''},
+{id:'b101',lib:true,name:'香蕉松饼',category:'早餐',time:15,servings:2,calories:420,tags:['免打发','孩子爱吃'],
+ ingredients:[{name:'香蕉',amount:'2根',grams:240},{name:'鸡蛋',amount:'2个',grams:100},{name:'面粉',amount:'80克',grams:80},{name:'牛奶',amount:'100ml',grams:100},{name:'糖',amount:'少许',grams:null}],
+ steps:['香蕉用叉子压成泥。','加鸡蛋、牛奶、面粉搅成浓稠可流动的糊。','不粘锅无油小火，舀一勺面糊摊成小圆饼。','表面冒泡后翻面，再煎1分钟。','淋蜂蜜或配酸奶吃。'],notes:''},
+{id:'b102',lib:true,name:'法式吐司',category:'早餐',time:15,servings:2,calories:520,tags:['西式','快手'],
+ ingredients:[{name:'吐司',amount:'4片',grams:120},{name:'鸡蛋',amount:'2个',grams:100},{name:'牛奶',amount:'150ml',grams:150},{name:'糖',amount:'1勺',grams:null},{name:'黄油',amount:'10克',grams:10},{name:'蜂蜜',amount:'适量',grams:null}],
+ steps:['鸡蛋、牛奶、糖打匀。','吐司两面各浸10秒，吸饱蛋液。','黄油小火融化，放吐司每面煎2分钟到金黄。','淋蜂蜜或撒糖粉。'],notes:''},
+{id:'b103',lib:true,name:'自制豆浆',category:'早餐',time:30,servings:3,calories:240,tags:['饮品','健康'],
+ ingredients:[{name:'黄豆',amount:'100克',grams:100},{name:'水',amount:'1200ml',grams:1200},{name:'糖',amount:'适量',grams:null}],
+ steps:['黄豆洗净提前浸泡一夜（夏天放冰箱）。','连豆带水放入豆浆机/破壁机，选豆浆程序。','滤掉豆渣，按口味加糖。','务必彻底煮沸再喝，生豆浆有毒。'],notes:'没煮熟的豆浆不能喝，务必彻底煮沸。'},
+{id:'b104',lib:true,name:'蒜泥白肉',category:'凉菜',time:35,servings:3,calories:560,tags:['凉菜','川味'],
+ ingredients:[{name:'五花肉',amount:'300克',grams:300},{name:'蒜',amount:'1头',grams:40},{name:'黄瓜',amount:'1根',grams:200},{name:'生抽',amount:'2勺',grams:null},{name:'香醋',amount:'1勺',grams:null},{name:'辣椒油',amount:'2勺',grams:null},{name:'糖',amount:'少许',grams:null},{name:'姜片',amount:'3片',grams:null}],
+ steps:['五花肉整块冷水下锅，加姜片和料酒，煮25分钟到筷子能插透。','捞出晾凉，切成越薄越好的片；黄瓜刨长片垫盘底。','蒜捣成泥，加2勺生抽、1勺香醋、2勺辣椒油、少许糖调成蒜泥汁。','肉片铺在黄瓜上，浇汁拌匀。'],notes:''},
+{id:'b105',lib:true,name:'凉拌海带丝',category:'凉菜',time:12,servings:3,calories:120,tags:['爽口','低卡'],
+ ingredients:[{name:'海带丝',amount:'300克',grams:300},{name:'蒜',amount:'3瓣',grams:null},{name:'小米辣',amount:'1个',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'香醋',amount:'2勺',grams:null},{name:'糖',amount:'少许',grams:null},{name:'香油',amount:'1勺',grams:null}],
+ steps:['海带丝水开煮5分钟，捞出过凉。','加蒜末、小米辣圈。','加2勺生抽、2勺醋、少许糖、1勺香油。','拌匀冷藏10分钟更入味。'],notes:''},
+{id:'b106',lib:true,name:'酸辣蕨根粉',category:'凉菜',time:15,servings:2,calories:420,tags:['开胃','夏季'],
+ ingredients:[{name:'蕨根粉',amount:'150克',grams:150},{name:'蒜',amount:'3瓣',grams:null},{name:'小米辣',amount:'2个',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'香醋',amount:'2勺',grams:null},{name:'糖',amount:'1勺',grams:null},{name:'辣椒油',amount:'1勺',grams:null},{name:'花生碎',amount:'1勺',grams:null}],
+ steps:['蕨根粉冷水下锅煮8分钟到无硬心，捞出过凉。','蒜末、小米辣、2勺生抽、2勺醋、1勺糖、1勺辣椒油调成酸辣汁。','蕨根粉沥干，浇汁拌匀。','撒花生碎和黄瓜丝。'],notes:''},
+{id:'b107',lib:true,name:'凉拌鸡丝',category:'凉菜',time:20,servings:2,calories:320,tags:['低卡','减脂'],
+ ingredients:[{name:'鸡胸肉',amount:'2块',grams:300},{name:'黄瓜',amount:'1根',grams:200},{name:'蒜',amount:'2瓣',grams:null},{name:'生抽',amount:'2勺',grams:null},{name:'香醋',amount:'1勺',grams:null},{name:'辣椒油',amount:'1勺',grams:null},{name:'香油',amount:'几滴',grams:null},{name:'白芝麻',amount:'少许',grams:null}],
+ steps:['鸡胸冷水下锅，加姜片，煮12分钟关火焖5分钟。','晾凉后用手撕成细丝；黄瓜切丝。','加蒜末、2勺生抽、1勺醋、1勺辣椒油、几滴香油。','拌匀撒白芝麻。'],notes:''},
+{id:'b108',lib:true,name:'银耳莲子羹',category:'甜品',time:80,servings:4,calories:240,tags:['滋润','养颜'],
+ ingredients:[{name:'干银耳',amount:'半朵',grams:15},{name:'莲子',amount:'30克',grams:30},{name:'红枣',amount:'6颗',grams:null},{name:'枸杞',amount:'少许',grams:null},{name:'冰糖',amount:'30克',grams:30}],
+ steps:['干银耳冷水泡发2小时，去蒂撕成小朵（撕得越碎越容易出胶）。','银耳、莲子加足量水，大火烧开转小火炖60分钟。','加红枣、冰糖再炖15分钟。','撒枸杞关火，焖5分钟。'],notes:'出胶的关键是小火慢炖别偷懒。'},
+{id:'b109',lib:true,name:'芒果奶昔',category:'甜品',time:5,servings:2,calories:260,tags:['免煮','快手'],
+ ingredients:[{name:'芒果',amount:'2个',grams:400},{name:'牛奶',amount:'300ml',grams:300},{name:'蜂蜜',amount:'少许',grams:null},{name:'冰块',amount:'少许',grams:null}],
+ steps:['芒果沿核剖开，划十字刀取果肉。','芒果肉、牛奶、蜂蜜和冰块放进搅拌机。','高速打30秒到顺滑即可。'],notes:''},
+{id:'b110',lib:true,name:'蜂蜜柠檬茶',category:'甜品',time:15,servings:8,calories:110,tags:['饮品','润喉'],
+ ingredients:[{name:'柠檬',amount:'2个',grams:200},{name:'蜂蜜',amount:'150克',grams:150},{name:'盐',amount:'少许',grams:null}],
+ steps:['柠檬用盐搓洗表皮，擦干，切薄片去籽（不去籽会苦）。','无水无油的罐子里一层柠檬一层蜂蜜，直到装满。','冷藏腌制1晚，喝时夹2片柠檬兑温水。'],notes:''},
+{id:'b111',lib:true,name:'双皮奶',category:'甜品',time:30,servings:2,calories:320,tags:['粤式','嫩滑'],
+ ingredients:[{name:'全脂牛奶',amount:'400ml',grams:400},{name:'蛋清',amount:'3个',grams:null},{name:'白糖',amount:'3勺',grams:null}],
+ steps:['牛奶小火加热到锅边冒小泡（别沸腾），倒入碗中。','静置晾凉，表面会结出第一层奶皮。','挑起奶皮一角，把奶倒回锅里，奶皮留在碗底。','蛋清加糖打散，与牛奶混匀过筛，沿碗边缓缓倒回，让奶皮浮起。','盖保鲜膜中火蒸12分钟，关火焖5分钟。'],notes:''},
+{id:'b112',lib:true,name:'牛奶小方',category:'甜品',time:30,servings:4,calories:340,tags:['免烤箱','奶香'],
+ ingredients:[{name:'牛奶',amount:'400ml',grams:400},{name:'玉米淀粉',amount:'50克',grams:50},{name:'白糖',amount:'3勺',grams:null},{name:'椰蓉',amount:'适量',grams:null}],
+ steps:['牛奶、玉米淀粉、糖放进小锅，开小火不停搅拌。','搅拌到变成浓稠的糊状（铲子划过能留下痕迹），约3分钟。','倒入抹了油的保鲜盒，抹平，冷藏2小时定型。','倒出切块，滚上椰蓉。'],notes:''},
+{id:'b113',lib:true,name:'酸奶水果捞',category:'甜品',time:10,servings:2,calories:280,tags:['免煮','健康'],
+ ingredients:[{name:'酸奶',amount:'300克',grams:300},{name:'芒果',amount:'1个',grams:250},{name:'香蕉',amount:'1根',grams:120},{name:'苹果',amount:'半个',grams:100},{name:'坚果碎',amount:'1勺',grams:null}],
+ steps:['水果洗净去皮切丁。','酸奶倒入碗中。','铺上水果丁，撒坚果碎即可。'],notes:''},
+{id:'b114',lib:true,name:'简易蛋挞',category:'烘焙',time:30,servings:4,calories:380,tags:['烘焙','新手友好'],
+ ingredients:[{name:'蛋挞皮',amount:'8个',grams:400},{name:'牛奶',amount:'150ml',grams:150},{name:'淡奶油',amount:'100ml',grams:100},{name:'蛋黄',amount:'2个',grams:null},{name:'白糖',amount:'20克',grams:20}],
+ steps:['牛奶、淡奶油、糖小火搅拌到糖融化，放凉。','加入2个蛋黄搅匀，过筛2次得到细腻的挞水。','挞水倒入蛋挞皮，八九分满。','烤箱200度预热5分钟，烤20分钟到表面出现焦糖斑。'],notes:''},
+{id:'b115',lib:true,name:'铜锣烧',category:'烘焙',time:25,servings:4,calories:420,tags:['烘焙','平底锅'],
+ ingredients:[{name:'鸡蛋',amount:'2个',grams:100},{name:'面粉',amount:'150克',grams:150},{name:'白糖',amount:'40克',grams:40},{name:'蜂蜜',amount:'1勺',grams:null},{name:'泡打粉',amount:'2克',grams:null},{name:'红豆沙',amount:'适量',grams:null}],
+ steps:['鸡蛋加糖和蜂蜜，打到颜色发白、滴落有纹路。','筛入面粉和泡打粉，拌到无颗粒，静置15分钟。','不粘锅不放油，小火舀一勺面糊自然摊圆，表面冒小泡后翻面再烙10秒。','两片之间夹红豆沙。'],notes:''},
+{id:'b116',lib:true,name:'玛格丽特饼干',category:'烘焙',time:40,servings:6,calories:480,tags:['烘焙','新手友好'],
+ ingredients:[{name:'低筋面粉',amount:'100克',grams:100},{name:'玉米淀粉',amount:'100克',grams:100},{name:'黄油',amount:'100克',grams:100},{name:'糖粉',amount:'40克',grams:40},{name:'熟蛋黄',amount:'2个',grams:null}],
+ steps:['黄油室温软化到手指能轻松按洞，加糖粉打发到颜色变白、体积蓬松。','筛入熟蛋黄、低筋面粉和玉米淀粉，揉成光滑面团。','冷藏1小时后搓成10克一个的小球，摆在烤盘上，用大拇指按出自然裂纹。','170度烤18分钟，边缘微黄即可。'],notes:''},
+{id:'b117',lib:true,name:'吐司披萨',category:'烘焙',time:15,servings:3,calories:520,tags:['烘焙','快手'],
+ ingredients:[{name:'吐司',amount:'3片',grams:100},{name:'火腿',amount:'50克',grams:50},{name:'青椒',amount:'半个',grams:50},{name:'玉米粒',amount:'30克',grams:30},{name:'芝士碎',amount:'80克',grams:80},{name:'番茄酱',amount:'适量',grams:null}],
+ steps:['吐司上抹一层番茄酱。','铺火腿片、青椒圈、玉米粒，撒满芝士碎。','烤箱180度烤8-10分钟，到芝士融化带焦斑。','趁热吃，会拉丝。'],notes:''}
+];
+function seedSamples(){
+  const now = Date.now();
+  SAMPLES.forEach((s,i)=>{
+    state.recipes.push({ id:uid(), favorite:false, createdAt:now+i, updatedAt:now+i,
+      ...JSON.parse(JSON.stringify(s)) });
+  });
+  save();
+}
+
+/* ================= Toast ================= */
+let toastTimer;
+function toast(msg, err){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (err ? ' err' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+/* ================= 弹窗开关 ================= */
+function open(id){ $('#'+id).classList.add('open'); document.body.style.overflow='hidden'; }
+function close(id){ $('#'+id).classList.remove('open'); if(!document.querySelector('.modal.open')) document.body.style.overflow=''; }
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){
+    const ms=[...document.querySelectorAll('.modal.open')];
+    const m=ms[ms.length-1];
+    if(m && m.id!=='mForm' && m.id!=='mConfirm' && m.id!=='mWelcome') close(m.id);
+  }
+});
+
+/* ================= 确认框 ================= */
+function confirmDialog({title='确认', message='', buttons}){
+  const btns = buttons || [{text:'取消',ghost:true},{text:'确定'}];
+  $('#confirmTitle').textContent = title;
+  $('#confirmBody').innerHTML =
+    `<p class="c-msg">${esc(message)}</p>
+     <div class="c-btns">${btns.map((b,i)=>
+       `<button class="btn ${b.danger?'danger':b.ghost?'ghost':''}" data-ci="${i}">${esc(b.text)}</button>`).join('')}</div>`;
+  ui.confirmBtns = btns;
+  open('mConfirm');
+}
+
+/* ================= Tab 切换 ================= */
+function setTab(t){
+  ui.tab = t;
+  document.body.dataset.tab = t;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  $('#view-'+t).classList.add('active');
+  document.querySelectorAll('[data-tab]').forEach(b=>{
+    if(b.closest('.top-tabs') || b.closest('.bottom-nav')) b.classList.toggle('on', b.dataset.tab===t);
+  });
+  window.scrollTo(0,0);
+  renderAll();
+}
+
+/* ================= 统一重绘 ================= */
+function renderAll(){ renderHero(); renderInspire(); renderFridgeHint(); renderRecipes(); renderFridge(); renderShopping(); renderEats(); renderSettings(); }
+
+/* ================= 问候语 + 今日菜单灵感卡 ================= */
+function greetingInfo(){
+  const h=new Date().getHours();
+  const hi = h<5?'夜深了，早点休息':h<10?'早上好呀':h<13?'中午好呀':h<17?'下午好呀':h<22?'晚上好呀':'夜深啦';
+  const subs=['今天也要好好吃饭','好好吃饭，就是好好生活','冰箱满一点，日子稳一点','一日三餐，人间烟火','今天想吃点什么呢','认真做饭的人最可爱'];
+  const meal = h<5?'夜宵':h<10?'早餐':h<14?'午餐':h<20?'晚餐':'夜宵';
+  return { hi, sub: subs[new Date().getDate()%subs.length], meal };
+}
+function renderHero(){
+  const g=greetingInfo();
+  $('#heroGreeting').textContent=g.hi;
+  $('#heroSub').textContent=g.sub;
+}
+function pickInspire(){
+  const pool=recipePool();
+  if(!pool.length){ ui.inspire=null; return; }
+  const by=c=>pool.filter(r=>r.category===c);
+  const pick=a=>a.length?a[Math.floor(Math.random()*a.length)]:null;
+  let main=pick([...by('荤菜'),...by('家常菜')]);
+  let veg=pick([...by('素菜'),...by('凉菜')]);
+  let soup=pick(by('汤羹'));
+  let ids=[main,veg,soup].filter(Boolean).map(r=>r.id);
+  if(!ids.length) ids=[pool[Math.floor(Math.random()*pool.length)].id];
+  ui.inspire=[...new Set(ids)];
+}
+function renderInspire(){
+  const el=$('#inspireCard'); if(!el) return;
+  const pool=recipePool();
+  if(!pool.length){ el.style.display='none'; return; }
+  el.style.display='';
+  if(!ui.inspire || !ui.inspire.length || !ui.inspire.every(id=>findRecipe(id))) pickInspire();
+  const dishes=ui.inspire.map(id=>findRecipe(id)).filter(Boolean);
+  if(!dishes.length){ pickInspire(); return renderInspire(); }
+  const g=greetingInfo();
+  const totalTime=dishes.reduce((s,r)=>s+(r.time||0),0);
+  el.innerHTML=`
+    <span class="inspire-pill">${g.meal}推荐 · ${dishes.length>1?'荤素搭配':'今日之选'}</span>
+    <div class="inspire-emoji">${dishes.map(d=>ph(d)).join(' ')}</div>
+    <div class="inspire-names">${dishes.map(d=>`<button type="button" class="inspire-dish" data-action="combo-open" data-id="${d.id}">${esc(d.name)}</button>`).join('<span class="inspire-sep">·</span>')}</div>
+    <div class="inspire-sub">现搭的组合，换换口味</div>
+    ${totalTime?`<span class="inspire-time">⏱ 共约 ${totalTime} 分钟</span>`:''}
+    <div class="inspire-btns">
+      <button class="btn ghost" data-action="inspire-again">换一组</button>
+      <button class="btn" data-action="inspire-go">就吃这套！</button>
+    </div>`;
+}
+function renderFridgeHint(){
+  const el=$('#fridgeHintLine'); if(!el) return;
+  const n=(state.fridge||[]).length;
+  el.textContent = n ? `🧊 冰箱里记着 ${n} 样，推荐会优先用它们 ›` : '🧊 冰箱还空着，记点食材就能按现有的推荐菜谱 ›';
+}
+function renderCombo(){
+  const dishes=(ui.comboIds||[]).map(id=>findRecipe(id)).filter(Boolean);
+  const totalTime=dishes.reduce((s,r)=>s+(r.time||0),0);
+  $('#comboBody').innerHTML = dishes.length ? dishes.map(d=>`
+    <div class="shop-item" data-action="combo-open" data-id="${d.id}" style="cursor:pointer">
+      <span style="font-size:22px">${ph(d)}</span>
+      <div class="si-main"><span>${esc(d.name)}</span><i class="src">${esc(d.category||'未分类')}${d.time?' · 约'+d.time+'分钟':''}</i></div>
+      <span class="muted">›</span>
+    </div>`).join('') + `<p class="muted" style="font-size:12px;margin-top:10px">共约 ${totalTime} 分钟。点菜名看做法；加购会按食谱自动去重。</p>`
+  : `<p class="muted">这套组合里的菜谱不见了，换一组试试</p>`;
+}
+
+/* ================= 占位图标 ================= */
+function ph(r){
+  const map={'汤羹':'🍲','烘焙':'🍰','甜品':'🍮','素菜':'🥦','早餐':'🥟','主食':'🍜','家常菜':'🍳','荤菜':'🍖','凉菜':'🥗','饮品':'🧋','海鲜':'🦐'};
+  if(map[r.category]) return map[r.category];
+  const pool=['🥘','🍛','🥗','🍳','🌯'];
+  return pool[(r.name||'').length % pool.length];
+}
+
+/* ================= 食谱列表（含菜谱库与食材推荐） ================= */
+function findRecipe(id){
+  return state.recipes.find(x=>x.id===id) || BUILTIN.find(x=>x.id===id);
+}
+function recipePool(){
+  return ui.libMode==='lib' ? BUILTIN : state.recipes;
+}
+function activeTerms(){
+  if(ui.recMode==='fridge') return (state.fridge||[]).map(f=>f.name.trim()).filter(Boolean);
+  const q=ui.search.trim().toLowerCase();
+  return q ? q.split(/[\s,，、]+/).filter(Boolean) : [];
+}
+/* 按食材/名称匹配打分：每个词都必须命中，命中食材多的排前面 */
+function scoreRecipe(r, terms){
+  if(!terms.length) return 0;
+  const name=(r.name||'').toLowerCase();
+  const ingNames=(r.ingredients||[]).map(i=>(i.name||'').toLowerCase());
+  let total=0;
+  for(const t of terms){
+    let s=-1;
+    if(name.includes(t)) s=Math.max(s,5);
+    if((r.tags||[]).some(g=>(g||'').toLowerCase().includes(t))) s=Math.max(s,3);
+    if((r.category||'').toLowerCase().includes(t)) s=Math.max(s,3);
+    const im=ingNames.filter(n=>n.includes(t)).length;
+    if(im) s=Math.max(s, 2+Math.min(im,3));
+    if(s<0) return -1;
+    total+=s;
+  }
+  return total;
+}
+function ingMatchCount(r, terms){
+  const ingNames=(r.ingredients||[]).map(i=>(i.name||'').toLowerCase());
+  return terms.filter(t=>ingNames.some(n=>n.includes(t))).length;
+}
+function fridgeMissing(r){
+  const ings=(r.ingredients||[]).map(i=>(i.name||'').trim()).filter(Boolean);
+  let have=0;
+  ings.forEach(n=>{
+    const ok=(state.fridge||[]).some(f=>{
+      const a=f.name.trim();
+      return a && (a===n || (a.length>=2 && n.length>=2 && (a.includes(n)||n.includes(a))));
+    });
+    if(ok) have++;
+  });
+  return {have, missing:ings.length-have, total:ings.length};
+}
+function recipeCardHtml(r){
+  const terms=activeTerms();
+  let badge='';
+  if(ui.recMode==='fridge'){
+    const m=fridgeMissing(r);
+    badge = m.missing===0 ? '<span class="chip sm on">🎉 料全齐</span>' : `<span class="chip sm">缺 ${m.missing} 样</span>`;
+  }else if(terms.length){
+    const mc=ingMatchCount(r, terms);
+    if(mc>0) badge=`<span class="chip sm on">含 ${mc} 种匹配食材</span>`;
+  }
+  const cookBadge = (!r.lib && r.cookedCount) ? `<span class="chip sm">🍳 ${r.cookedCount}次</span>` : '';
+  const saved = r.lib && state.recipes.some(x=>x.libId===r.id);
+  return `
+    <article class="rcard" data-action="open-detail" data-id="${r.id}">
+      <div class="thumb">${r.image?`<img src="${r.image}" alt="">`:`<span class="ph">${ph(r)}</span>`}</div>
+      <div class="rc-body">
+        <div class="rc-name">${esc(r.name)}${(!r.lib&&r.favorite)?' ⭐':''}</div>
+        <div class="rc-meta">${esc(r.category||'未分类')}${r.time?` · ${r.time}分钟`:''}</div>
+        ${(badge||cookBadge)?`<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${badge}${cookBadge}</div>`:''}
+      </div>
+      ${r.lib
+        ? (saved?'<span class="libtag">✓ 已存</span>':'<span class="libtag">📚 库</span>')
+        : `<button class="fav" data-action="fav" data-id="${r.id}" aria-label="收藏">${r.favorite?'★':'☆'}</button>`}
+    </article>`;
+}
+function renderRecipes(){
+  const pool=recipePool();
+  const cats=[...new Set(pool.map(r=>r.category).filter(Boolean))];
+  const chips=[{k:'all',label:'全部'}];
+  if(ui.libMode==='mine') chips.push({k:'__fav',label:'⭐ 收藏'});
+  chips.push(...cats.map(c=>({k:c,label:c})));
+  $('#chipsBar').innerHTML=chips.map(c=>
+    `<button class="chip ${ui.cat===c.k?'on':''}" data-action="cat" data-k="${esc(c.k)}">${esc(c.label)}</button>`).join('');
+  document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on', b.dataset.m===ui.libMode));
+  $('#libLabel').textContent = ui.libMode==='lib' ? '📚 菜谱库' : '我的食谱';
+  $('#btnFridgeRec').classList.toggle('on', ui.recMode==='fridge');
+  document.body.dataset.lib = (ui.tab==='recipes' && ui.libMode==='lib') ? '1' : '';
+
+  let list=pool.filter(r=>{
+    if(ui.libMode==='mine' && ui.cat==='__fav' && !r.favorite) return false;
+    if(ui.cat!=='all' && ui.cat!=='__fav' && r.category!==ui.cat) return false;
+    return true;
+  });
+  const terms=activeTerms();
+  if(ui.recMode==='fridge'){
+    // 冰箱推荐：命中至少一种食材即入围，缺得少的排前面
+    list=list.map(r=>({r, m:fridgeMissing(r)}))
+             .filter(x=>x.m.have>0)
+             .sort((a,b)=>(a.m.missing-b.m.missing) || (b.m.have-a.m.have))
+             .map(x=>x.r);
+  }else if(terms.length){
+    list=list.map(r=>({r, sc:scoreRecipe(r, terms)}))
+             .filter(x=>x.sc>=0)
+             .sort((a,b)=>b.sc-a.sc)
+             .map(x=>x.r);
+  }else{
+    list.sort((a,b)=>((b.favorite?1:0)-(a.favorite?1:0)) || ((b.updatedAt||0)-(a.updatedAt||0)));
+  }
+  $('#recipeCount').textContent=`（${list.length}）`;
+
+  const grid=$('#recipeGrid');
+  if(!pool.length){
+    grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="big">🍳</div><p>还没有食谱<br>点右下角 ＋ 记录第一道拿手菜，或去菜谱库逛逛</p></div>`;
+    return;
+  }
+  if(!list.length){
+    grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="big">🔍</div><p>${ui.recMode==='fridge'?'冰箱里的食材暂时凑不出哪道菜<br>缺的可以去菜谱库里找':'没有匹配的菜谱，换个词试试'}</p></div>`;
+    return;
+  }
+  grid.innerHTML=list.map(recipeCardHtml).join('');
+}
+
+/* ================= 食谱详情 ================= */
+function openDetail(id){
+  ui.detail=id; ui.checkedIng.clear();
+  renderDetail(); open('mDetail');
+}
+function renderDetail(){
+  const r=findRecipe(ui.detail); if(!r) return;
+  const lib=!!r.lib;
+  const saved = lib && state.recipes.some(x=>x.libId===r.id);
+  $('#detailBody').innerHTML=`
+    ${r.image?`<img class="d-img" src="${r.image}" alt="">`:`<div class="d-banner">${ph(r)}</div>`}
+    <div class="d-head">
+      <h2>${esc(r.name)}</h2>
+      <div class="d-meta">${[lib?'📚 菜谱库':'', r.category?`🏷 ${esc(r.category)}`:'', r.time?`⏱ ${r.time} 分钟`:'', r.servings?`🍽 ${r.servings} 人份`:'', r.calories?`🔥 约 ${r.calories} 千卡/份`:'', r.cookedCount?`🍳 做过 ${r.cookedCount} 次`:'', r.lastCookedAt?`🕐 上次 ${new Date(r.lastCookedAt).getMonth()+1}/${new Date(r.lastCookedAt).getDate()}`:''].filter(Boolean).map(x=>`<span class="chip sm">${x}</span>`).join('')}</div>
+    </div>
+    <div class="d-actions">
+      <button class="btn ghost" data-action="cook-done" data-id="${r.id}">✅ 做过一次</button>
+      ${lib
+        ?`<button class="btn" data-action="save-builtin" data-id="${r.id}">${saved?'✓ 已在我的食谱':'⬇️ 存入我的食谱'}</button>
+          <button class="btn ghost" data-action="add-shop-from" data-id="${r.id}">🛒 食材加入购物清单</button>`
+        :`<button class="btn" data-action="add-shop-from" data-id="${r.id}">🛒 食材加入购物清单</button>
+          <button class="btn ghost" data-action="share" data-id="${r.id}">📤 分享</button>
+          <button class="btn ghost" data-action="edit" data-id="${r.id}">✏️ 编辑</button>
+          <button class="btn ghost" data-action="fav" data-id="${r.id}">${r.favorite?'★ 取消收藏':'☆ 收藏'}</button>
+          <button class="btn danger-ghost" data-action="del-recipe" data-id="${r.id}">🗑 删除</button>`}
+      <button class="btn ghost" data-action="cook-check" data-id="${r.id}">🧊 对照冰箱</button>
+    </div>
+    <h3>食材 <span class="hint">（做饭时可勾选）</span></h3>
+    <ul class="ing-check">${(r.ingredients||[]).length? r.ingredients.map((i,ix)=>`
+      <li><label><input type="checkbox" data-check-ing="${ix}"><span>${esc(i.name)}${i.amount?` <em>${esc(i.amount)}</em>`:''}${i.grams?` <em>≈${esc(i.grams)}g</em>`:''}</span></label></li>`).join('') : '<li class="muted" style="padding:8px 2px">未填写</li>'}</ul>
+    <h3>步骤</h3>
+    <ol class="steps">${(r.steps||[]).length? r.steps.map(s=>`<li>${esc(s)}</li>`).join('') : '<li class="muted">未填写</li>'}</ol>
+    ${r.notes?`<h3>📝 小贴士</h3><p class="notes">${esc(r.notes)}</p>`:''}
+    <h3 style="margin-top:20px">🔥 烹饪记录 <span class="hint">${(r.cooks&&r.cooks.length)?`共 ${r.cooks.length} 次`:'还没写过'}</span></h3>
+    <button class="btn ghost sm" data-action="cook-log-add" data-id="${r.id}">＋ 添加记录</button>
+    ${(r.cooks||[]).slice().sort((a,b)=>b.ts-a.ts).map(c=>`
+      <div class="cook-item" data-action="cook-log-edit" data-id="${r.id}" data-e="${c.id}">
+        <button class="ci-del" data-action="cook-log-del" data-id="${r.id}" data-e="${c.id}" aria-label="删除">✕</button>
+        <div class="ci-head"><b>${dateLabel(c.ts)}</b><span class="ci-stars">${c.stars?'★'.repeat(c.stars):''}<span class="dim">${'☆'.repeat(5-c.stars)}</span></span></div>
+        ${c.photo?`<img class="ci-photo" src="${c.photo}" alt="">`:''}
+        <p class="ci-note ${c.note?'':'muted'}">${c.note?esc(c.note):'未写感想，点开补一句吧'}</p>
+      </div>`).join('')}
+    ${(r.tags&&r.tags.length)?`<div class="tagline">${r.tags.map(t=>`<span class="chip sm">#${esc(t)}</span>`).join('')}</div>`:''}
+  `;
+}
+
+/* ================= 新建 / 编辑表单 ================= */
+function openForm(id, draft){
+  const r=id?state.recipes.find(x=>x.id===id):null;
+  ui.form = r ? {id:r.id, name:r.name, category:r.category||'', time:r.time||'', servings:r.servings||'', cal:r.calories||'',
+                 ingredients:(r.ingredients||[]).map(i=>({name:i.name,amount:i.amount,grams:(i.grams??'')})), steps:(r.steps||[]).slice(),
+                 tagsStr:(r.tags||[]).join(' '), notes:r.notes||'', image:r.image||null}
+              : {id:null, name:'', category:'', time:'', servings:'', cal:'', ingredients:[{name:'',amount:'',grams:''}], steps:[''], tagsStr:'', notes:'', image:null};
+  if(draft){
+    Object.assign(ui.form, draft);
+    if(!ui.form.ingredients.length) ui.form.ingredients=[{name:'',amount:'',grams:''}];
+    if(!ui.form.steps.length) ui.form.steps=[''];
+  }
+  if(!ui.form.ingredients.length) ui.form.ingredients=[{name:'',amount:'',grams:''}];
+  if(!ui.form.steps.length) ui.form.steps=[''];
+  $('#formTitle').textContent = r?'编辑食谱':'新建食谱';
+  $('#f-name').value=ui.form.name; $('#f-cat').value=ui.form.category;
+  $('#f-time').value=ui.form.time; $('#f-serv').value=ui.form.servings; $('#f-cal').value=ui.form.cal;
+  $('#f-tags').value=ui.form.tagsStr; $('#f-notes').value=ui.form.notes;
+  refreshImgPreview(); renderIngList(); renderStepList();
+  open('mForm');
+  setTimeout(()=>$('#f-name').focus(), 250);
+}
+function refreshImgPreview(){
+  const has=!!(ui.form&&ui.form.image);
+  $('#imgPreview').hidden=!has;
+  $('#imgEmpty').hidden=has;
+  $('#btnImgRm').hidden=!has;
+  if(has) $('#imgPreview').src=ui.form.image;
+}
+function renderIngList(){
+  $('#ingList').innerHTML=ui.form.ingredients.map((it,i)=>`
+    <div class="ing-row">
+      <input class="input" data-f="ing-name" data-i="${i}" placeholder="食材名" value="${esc(it.name)}">
+      <input class="input" data-f="ing-amt" data-i="${i}" placeholder="用量" value="${esc(it.amount)}">
+      <input class="input" data-f="ing-gram" data-i="${i}" type="number" min="0" inputmode="decimal" placeholder="克" value="${esc(it.grams??'')}">
+      <button class="icon-btn" type="button" data-action="ing-del" data-i="${i}">✕</button>
+    </div>`).join('');
+}
+function renderStepList(){
+  $('#stepList').innerHTML=ui.form.steps.map((s,i)=>`
+    <div class="step-row">
+      <span class="step-num">${i+1}</span>
+      <textarea class="input" rows="2" placeholder="写具体些：火候、时间、状态，如：中小火煎3分钟至两面金黄">${esc(s)}</textarea>
+      <div class="step-btns">
+        <button class="icon-btn" type="button" data-action="step-up" data-i="${i}" title="上移">↑</button>
+        <button class="icon-btn" type="button" data-action="step-down" data-i="${i}" title="下移">↓</button>
+        <button class="icon-btn" type="button" data-action="step-del" data-i="${i}" title="删除">✕</button>
+      </div>
+    </div>`).join('');
+}
+function syncFormFromDom(){
+  const f=ui.form; if(!f) return;
+  f.name=$('#f-name').value; f.category=$('#f-cat').value;
+  f.time=$('#f-time').value; f.servings=$('#f-serv').value; f.cal=$('#f-cal').value;
+  f.tagsStr=$('#f-tags').value; f.notes=$('#f-notes').value;
+  const names=[...document.querySelectorAll('#ingList [data-f=ing-name]')];
+  const amts=[...document.querySelectorAll('#ingList [data-f=ing-amt]')];
+  const grams=[...document.querySelectorAll('#ingList [data-f=ing-gram]')];
+  f.ingredients=names.map((el,i)=>({name:el.value, amount:amts[i]?amts[i].value:'', grams:grams[i]?grams[i].value:''}));
+  f.steps=[...document.querySelectorAll('#stepList textarea')].map(el=>el.value);
+}
+function scaleImageToDataURL(img, max, q){
+  let w=img.width, h=img.height;
+  const scale=Math.min(1, max/Math.max(w,h));
+  w=Math.round(w*scale); h=Math.round(h*scale);
+  const c=document.createElement('canvas');
+  c.width=w; c.height=h;
+  c.getContext('2d').drawImage(img,0,0,w,h);
+  return c.toDataURL('image/jpeg', q);
+}
+function compressImage(file, max=900, q=0.8){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>{
+      const img=new Image();
+      img.onload=()=>res(scaleImageToDataURL(img, max, q));
+      img.onerror=rej; img.src=r.result;
+    };
+    r.onerror=rej;
+    r.readAsDataURL(file);
+  });
+}
+function compressDataURL(url, max=900, q=0.8){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>res(scaleImageToDataURL(img, max, q));
+    img.onerror=rej; img.src=url;
+  });
+}
+function saveRecipe(){
+  syncFormFromDom();
+  const f=ui.form;
+  if(!f.name.trim()){ toast('请先填写食谱名称', true); $('#f-name').focus(); return; }
+  const now=Date.now();
+  const numOr=(v)=>{ const n=parseFloat(v); return isFinite(n)?n:null; };
+  const data={
+    name:f.name.trim(), category:f.category.trim(),
+    time:f.time?+f.time:null, servings:f.servings?+f.servings:null, calories:f.cal?+f.cal:null,
+    ingredients:f.ingredients.map(i=>({name:i.name.trim(),amount:i.amount.trim(),grams:i.grams===''||i.grams==null?null:numOr(i.grams)})).filter(i=>i.name),
+    steps:f.steps.map(s=>s.trim()).filter(Boolean),
+    tags:f.tagsStr.split(/[,，、\s]+/).filter(Boolean),
+    notes:f.notes.trim(), image:f.image, updatedAt:now
+  };
+  if(f.id){ Object.assign(state.recipes.find(r=>r.id===f.id), data); }
+  else{ state.recipes.push(Object.assign({id:uid(), favorite:false, createdAt:now}, data)); }
+  save(); close('mForm'); renderAll(); toast('已保存 ✅');
+}
+
+/* ================= 购物清单 ================= */
+function addShopItem(name, amount, from){
+  name=name.trim(); if(!name) return false;
+  const dup=state.shopping.find(s=>!s.checked && s.name.toLowerCase()===name.toLowerCase());
+  if(dup) return false;
+  state.shopping.push({id:uid(), name, amount:(amount||'').trim(), checked:false, from:from||'', createdAt:Date.now()});
+  return true;
+}
+function addFromRecipe(id){
+  const r=findRecipe(id); if(!r) return;
+  let added=0; const skipped=[];
+  (r.ingredients||[]).forEach(i=>{
+    if(!i.name.trim()) return;
+    const amt=[i.amount, i.grams?i.grams+'g':''].filter(Boolean).join(' · ');
+    if(addShopItem(i.name, amt, r.name)) added++;
+    else skipped.push(i.name.trim());
+  });
+  save(); renderAll();
+  if(added) toast(`已加入 ${added} 项食材${skipped.length?`，清单里已有：${skipped.join('、')}`:''}`);
+  else toast('清单里已经有了，没有新增');
+}
+function renderShopping(){
+  const pend=state.shopping.filter(s=>!s.checked);
+  const done=state.shopping.filter(s=>s.checked);
+  $('#shopCount').textContent=`（待买 ${pend.length} · 已买 ${done.length}）`;
+  const row=s=>`
+    <div class="shop-item ${s.checked?'done':''}">
+      <input type="checkbox" data-check-shop="${s.id}" ${s.checked?'checked':''}>
+      <div class="si-main"><span>${esc(s.name)}</span>${s.amount?`<em>${esc(s.amount)}</em>`:''}${s.from?`<i class="src">来自：${esc(s.from)}</i>`:''}</div>
+      <button class="icon-btn del" data-action="shop-del" data-id="${s.id}">✕</button>
+    </div>`;
+  $('#shopPending').innerHTML = pend.length ? pend.map(row).join('') : `<div class="empty" style="padding:26px"><div class="big">🛒</div><p>清单空空的<br>手动添加，或从食谱一键加入食材</p></div>`;
+  $('#shopDone').innerHTML = done.length ? done.map(row).join('') : '';
+  $('#doneGroup').hidden = !done.length;
+}
+
+/* ================= 购物清单导出 ================= */
+function shopExportText(){
+  const pend=state.shopping.filter(s=>!s.checked);
+  const done=state.shopping.filter(s=>s.checked);
+  if(!pend.length && !done.length) return '';
+  const lines=['🛒 购物清单', ''];
+  const item=s=>`${s.name}${s.amount?'（'+s.amount+'）':''}`;
+  if(pend.length){ lines.push('【待买】'); pend.forEach((s,i)=>lines.push(`${i+1}. ${item(s)}`)); }
+  if(done.length){ lines.push('', '【已买】'); done.forEach((s,i)=>lines.push(`${i+1}. ${item(s)}`)); }
+  lines.push('', '—— 来自「食谱小本」 ' + new Date().toLocaleDateString('zh-CN'));
+  return lines.join('\n');
+}
+function shopExportCsv(){
+  const cell=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const rows=[['状态','名称','数量','来源'].map(cell).join(',')];
+  state.shopping.forEach(s=>rows.push([s.checked?'已买':'待买', s.name, s.amount||'', s.from||''].map(cell).join(',')));
+  return '\ufeff' + rows.join('\r\n');
+}
+function downloadFile(filename, content, mime){
+  const blob=new Blob([content], {type:mime});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=filename;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+}
+function today(){
+  const d=new Date();
+  const p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}`;
+}
+function renderShopExport(){
+  const text=shopExportText();
+  $('#shopExportBody').innerHTML = !text
+    ? `<div class="empty" style="padding:34px"><div class="big">🛒</div><p>清单是空的，先加点东西吧</p></div>`
+    : `<pre class="export-preview">${esc(text)}</pre>
+       <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+         ${navigator.share?'<button class="btn" data-action="shop-share">📲 分享到微信等应用</button>':''}
+         <button class="btn ${navigator.share?'ghost':''}" data-action="shop-dl-txt">📄 保存为文本文件（.txt）</button>
+         <button class="btn ghost" data-action="shop-dl-csv">📊 保存为表格（.csv，Excel 可打开）</button>
+       </div>
+       <p class="muted" style="font-size:12px;margin-top:12px">表格里包含状态（待买/已买）、数量和来源食谱，方便汇总或打印。</p>`;
+}
+
+/* ================= 冰箱 ================= */
+function addFridgeItem(name, amount){
+  name=String(name||'').trim(); if(!name) return false;
+  const dup=state.fridge.find(x=>x.name.toLowerCase()===name.toLowerCase());
+  if(dup){ if(amount && amount.trim()) dup.amount=amount.trim(); return 'dup'; }
+  state.fridge.push({id:uid(), name, amount:String(amount||'').trim(), boughtAt:Date.now(), createdAt:Date.now()});
+  return true;
+}
+function updateFridgeHint(){
+  const name=$('#fridgeName').value.trim();
+  const el=$('#fridgeHint');
+  if(!name){ el.textContent=''; return; }
+  const d=shelfDays(name);
+  el.textContent = d>=365 ? `♾️ ${name}：耐放，不用操心保质期` : `⏳ ${name}：冷藏约可放 ${d} 天（常见估算，点卡片可改）`;
+}
+function addFridgeFromInputs(){
+  const n=$('#fridgeName'), a=$('#fridgeAmt');
+  if(!n.value.trim()){ toast('先输入食材名', true); n.focus(); return; }
+  const res=addFridgeItem(n.value, a.value);
+  save(); renderAll(); updateFridgeHint();
+  toast(res==='dup' ? '冰箱里已经有了，已更新数量 🧊' : `已存入冰箱 🧊 约可放 ${shelfDays(n.value.trim())} 天`);
+  n.value=''; a.value=''; n.focus();
+}
+function fridgeCardHtml(it, info){
+  const fmt=ts=>{ const d=new Date(ts); return `${d.getMonth()+1}/${d.getDate()}`; };
+  let expText, expCls;
+  if(info.staple){ expText='耐放'; expCls='exp-mute'; }
+  else if(info.remain<0){ expText=`已过期 ${-info.remain} 天`; expCls='exp-danger'; }
+  else if(info.remain===0){ expText='今天到期'; expCls='exp-danger'; }
+  else if(info.remain<=7){ expText=`${info.remain}天后到期`; expCls=info.remain<=2?'exp-danger':'exp-warn'; }
+  else { expText=`${fmt(info.exp)} 到期`; expCls='exp-fresh'; }
+  return `<div class="fcard" data-action="fridge-edit" data-id="${it.id}">
+    <button class="del" data-action="fridge-del" data-id="${it.id}" aria-label="移除">✕</button>
+    <div class="pic">${ingredientEmoji(it.name)}</div>
+    <div class="name">${esc(it.name)}</div>
+    ${it.amount?`<div class="amt">${esc(it.amount)}</div>`:''}
+    <div class="bought">购于 ${fmt(info.bought)}</div>
+    <div class="exp ${expCls}">${expText}</div>
+  </div>`;
+}
+function renderFridge(){
+  const list=state.fridge||[];
+  $('#fridgeCount').textContent=`（${list.length}）`;
+  $('#fridgeQuick').innerHTML=FRIDGE_QUICK.map(n=>{
+    const has=list.some(x=>x.name===n);
+    return `<button class="chip ${has?'on':''}" data-action="fridge-quick" data-k="${esc(n)}">${has?'✓ ':''}${esc(n)}</button>`;
+  }).join('');
+  const groups=[
+    {title:'⚠️ 已过期', dot:'var(--danger)', items:[]},
+    {title:'🔴 尽快吃掉（2天内）', dot:'var(--danger)', items:[]},
+    {title:'🟠 本周内吃掉', dot:'var(--warn)', items:[]},
+    {title:'🟢 还很新鲜', dot:'var(--ok)', items:[]},
+    {title:'♾️ 耐放', dot:'var(--muted)', items:[]},
+  ];
+  list.forEach(it=>{
+    const info=expiryInfo(it);
+    const g = info.staple ? groups[4] : info.remain<0 ? groups[0] : info.remain<=2 ? groups[1] : info.remain<=7 ? groups[2] : groups[3];
+    g.items.push({it, info});
+  });
+  groups.forEach(g=>g.items.sort((a,b)=>a.info.remain-b.info.remain));
+  let html='';
+  groups.forEach(g=>{
+    if(!g.items.length) return;
+    html+=`<div class="group-head"><span class="dot" style="background:${g.dot}"></span>${g.title}<span class="cnt">${g.items.length}</span></div>
+      <div class="fridge-grid">${g.items.map(({it,info})=>fridgeCardHtml(it,info)).join('')}</div>`;
+  });
+  $('#fridgeGroups').innerHTML = html || `<div class="empty" style="padding:26px"><div class="big">🧊</div><p>冰箱空空的<br>把买回来的食材存进来，自动计算保鲜期</p></div>`;
+}
+
+/* ================= 开始做饭（对照冰箱） ================= */
+function matchFridge(r){
+  const have=[], need=[];
+  (r.ingredients||[]).forEach(i=>{
+    const n=(i.name||'').trim(); if(!n) return;
+    const f=(state.fridge||[]).find(x=>{
+      const a=x.name.trim(), b=n;
+      if(a.toLowerCase()===b.toLowerCase()) return true;
+      return a.length>=2 && b.length>=2 && (a.includes(b) || b.includes(a));
+    });
+    if(f) have.push({ing:i, fridge:f}); else need.push(i);
+  });
+  return {have, need};
+}
+/* 做饭计数 + 烹饪手记：库菜会先自动存入"我的食谱"再记录 */
+function ensureUserRecipe(id){
+  let r=findRecipe(id);
+  if(!r) return null;
+  if(r.lib){
+    const mine=state.recipes.find(x=>x.libId===r.id);
+    if(mine) return mine;
+    const copy=JSON.parse(JSON.stringify(r));
+    delete copy.lib;
+    r=Object.assign(copy, {id:uid(), libId:r.id, favorite:false, createdAt:Date.now(), updatedAt:Date.now()});
+    state.recipes.push(r);
+  }
+  return r;
+}
+function markCooked(id){
+  const r=ensureUserRecipe(id); if(!r) return null;
+  r.cooks=(r.cooks||[]);
+  r.cooks.push({id:uid(), ts:Date.now(), stars:0, note:'', photo:null});
+  r.cookedCount=r.cooks.length;
+  r.lastCookedAt=Date.now();
+  r.updatedAt=Date.now();
+  save();
+  return r;
+}
+function dateLabel(ts){
+  const d=new Date(ts), now=new Date();
+  const same=(a,b)=>a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+  if(same(d,now)) return '今天';
+  if(same(d,new Date(now.getTime()-86400000))) return '昨天';
+  const md=`${d.getMonth()+1}月${d.getDate()}日`;
+  return d.getFullYear()===now.getFullYear()?md:`${d.getFullYear()}年${md}`;
+}
+function renderCook(){
+  const body=$('#cookBody');
+  if(!ui.cookRecipeId){
+    const list=state.recipes;
+    body.innerHTML = `<p class="muted" style="font-size:13px;margin-bottom:10px">选一道想做的菜，我来对照你的冰箱：</p>` +
+      (list.length ? list.map(r=>`
+        <div class="shop-item" data-action="cook-recipe" data-id="${r.id}" style="cursor:pointer">
+          <span style="font-size:22px">${ph(r)}</span>
+          <div class="si-main"><span>${esc(r.name)}</span><i class="src">${esc(r.category||'未分类')} · ${(r.ingredients||[]).length} 种食材</i></div>
+          <span class="muted">›</span>
+        </div>`).join('')
+      : `<div class="empty"><div class="big">🍳</div><p>还没有食谱，先去记一道吧</p></div>`);
+    return;
+  }
+  const r=findRecipe(ui.cookRecipeId);
+  if(!r){ ui.cookRecipeId=null; renderCook(); return; }
+  const {have, need}=matchFridge(r);
+  const needAmt=i=>[i.amount, i.grams?i.grams+'g':''].filter(Boolean).join(' · ');
+  body.innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <span style="font-size:38px">${ph(r)}</span>
+      <div><h2 style="font-size:18px">${esc(r.name)}</h2><p class="muted" style="font-size:13px">对照你的冰箱</p></div>
+    </div>
+    ${!(state.fridge||[]).length?`<p style="font-size:13px;background:var(--accent-soft);border-radius:10px;padding:10px 12px">💡 冰箱还是空的，对照可能不准——先去「冰箱」页把现有食材存进来吧。</p>`:''}
+    <h3 style="font-size:14px;margin:14px 0 8px">✅ 冰箱里有（${have.length}）</h3>
+    ${have.length?have.map(({ing,fridge})=>`
+      <div class="shop-item"><span style="color:var(--ok);font-weight:700">✓</span>
+        <div class="si-main"><span>${esc(ing.name)}</span>${ing.amount?`<em>${esc(ing.amount)}</em>`:''}
+        ${fridge.amount?`<i class="src">冰箱：${esc(fridge.amount)}</i>`:''}</div>
+      </div>`).join('')
+    :`<p class="muted" style="font-size:13px;padding:2px 2px 6px">一种都对不上…看看下面缺的吧</p>`}
+    <h3 style="font-size:14px;margin:16px 0 8px">🛒 还需要买（${need.length}）</h3>
+    ${need.length?need.map(i=>`
+      <div class="shop-item"><span style="color:var(--danger);font-weight:700">✗</span>
+        <div class="si-main"><span>${esc(i.name)}</span>${needAmt(i)?`<em>${esc(needAmt(i))}</em>`:''}</div>
+      </div>`).join('')
+    :`<p style="font-size:14px;background:var(--accent-soft);border-radius:10px;padding:10px 12px">🎉 冰箱里的料就够了，直接开做！</p>`}
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
+      ${need.length?`<button class="btn" data-action="cook-add-missing" data-id="${r.id}">🛒 把 ${need.length} 样缺的加入购物清单</button>`:''}
+      <button class="btn ghost" data-action="cook-done" data-id="${r.id}">✅ 做好了，记一次</button>
+      <div style="display:flex;gap:10px">
+        <button class="btn ghost" style="flex:1" data-action="cook-back">← 换一道</button>
+        <button class="btn ghost" style="flex:1" data-action="cook-open-detail" data-id="${r.id}">👀 查看食谱</button>
+      </div>
+    </div>`;
+}
+
+/* ================= 烹饪记录弹窗 ================= */
+function starsHtml(group, v){
+  let s='';
+  for(let i=1;i<=5;i++) s+=`<button type="button" class="star-btn ${i<=v?'on':''}" data-action="star" data-g="${group}" data-v="${i}">★</button>`;
+  return s;
+}
+function renderCookStars(){ $('#cl-stars').innerHTML=starsHtml('cook', ui.clog?ui.clog.stars:0); }
+function refreshCookPhoto(){
+  const has=!!(ui.clog&&ui.clog.photo);
+  $('#cl-photo').hidden=!has; $('#cl-photo-empty').hidden=has; $('#cl-photo-rm').hidden=!has;
+  if(has) $('#cl-photo').src=ui.clog.photo;
+}
+function openCookLog(recipeId, entryId){
+  const r=findRecipe(recipeId); if(!r) return;
+  const entry=entryId?(r.cooks||[]).find(c=>c.id===entryId):null;
+  ui.clog={recipeId:r.id, entryId:entry?entry.id:null, ts:entry?entry.ts:Date.now(), stars:entry?(entry.stars||0):0, photo:entry?entry.photo||null:null};
+  $('#clTitle').textContent=entry?'编辑烹饪记录':'添加烹饪记录';
+  const d=new Date(ui.clog.ts);
+  $('#cl-date').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  $('#cl-note').value=entry?(entry.note||''):'';
+  $('#cl-del-btn').hidden=!entry;
+  renderCookStars(); refreshCookPhoto();
+  open('mCookLog');
+}
+function saveCookLog(){
+  const r=state.recipes.find(x=>x.id===ui.clog.recipeId); if(!r) return;
+  r.cooks=r.cooks||[];
+  const d=$('#cl-date').value;
+  const entry={id:ui.clog.entryId||uid(), ts:d?new Date(d+'T12:00:00').getTime():Date.now(), stars:ui.clog.stars, note:$('#cl-note').value.trim(), photo:ui.clog.photo};
+  const idx=r.cooks.findIndex(c=>c.id===entry.id);
+  if(idx>=0) r.cooks[idx]=entry; else r.cooks.push(entry);
+  r.cookedCount=r.cooks.length;
+  r.lastCookedAt=Math.max(r.lastCookedAt||0, entry.ts);
+  r.updatedAt=Date.now();
+  save(); close('mCookLog'); renderAll();
+  if($('#mDetail').classList.contains('open')) renderDetail();
+  toast('烹饪记录已保存 📖');
+}
+
+/* ================= 探店手记 ================= */
+function renderEats(){
+  const q=ui.eatSearch.trim().toLowerCase();
+  let list=(state.eats||[]).slice().sort((a,b)=>(b.ts||0)-(a.ts||0));
+  if(q) list=list.filter(e=>((e.name||'')+' '+(e.dish||'')+' '+(e.note||'')+' '+(e.loc||'')).toLowerCase().includes(q));
+  $('#eatCount').textContent=(state.eats||[]).length?`（${state.eats.length}）`:'';
+  $('#eatList').innerHTML = list.length ? list.map(e=>{
+    let exp='';
+    if(e.ts){ const d=new Date(e.ts); exp=`${d.getFullYear()!==new Date().getFullYear()?d.getFullYear()+'年':''}${d.getMonth()+1}月${d.getDate()}日`; }
+    return `<div class="eat-card" data-action="eat-edit" data-id="${e.id}">
+      <button class="ci-del" data-action="eat-del" data-id="${e.id}" aria-label="删除">✕</button>
+      <div class="eci-head"><b>${esc(e.name)}</b><span class="ci-stars">${e.stars?'★'.repeat(e.stars):''}<span class="dim">${'☆'.repeat(5-(e.stars||0))}</span></span></div>
+      ${e.dish?`<div class="eci-meta">🍽 ${esc(e.dish)}</div>`:''}
+      <div class="eci-meta">${[e.price?`人均 ¥${e.price}`:'', e.loc?`📍 ${esc(e.loc)}`:'', exp].filter(Boolean).join(' · ')}</div>
+      ${e.note?`<p class="eci-note">${esc(e.note)}</p>`:''}
+    </div>`;
+  }).join('') : `<div class="empty" style="padding:30px"><div class="big">🍽️</div><p>${q?'没有匹配的探店记录':'还没记过探店<br>在外面吃到好吃的，随手记下来'}</p></div>`;
+}
+function openEat(eatId){
+  const e=eatId?(state.eats||[]).find(x=>x.id===eatId):null;
+  ui.eat=eatId?{id:eatId}:{new:true};
+  $('#eatTitle').textContent=e?'编辑探店':'记一笔探店';
+  $('#ea-name').value=e?e.name:''; $('#ea-dish').value=e?e.dish||'':'';
+  $('#ea-price').value=e&&e.price?e.price:''; $('#ea-loc').value=e?e.loc||'':'';
+  const ts=e?e.ts:Date.now(); const d=new Date(ts);
+  $('#ea-date').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  $('#ea-note').value=e?e.note||'':'';
+  ui.eatStars=e?e.stars||0:0;
+  $('#ea-stars').innerHTML=starsHtml('eat', ui.eatStars);
+  $('#ea-del-btn').hidden=!e;
+  open('mEat');
+}
+function saveEat(){
+  const name=$('#ea-name').value.trim();
+  if(!name){ toast('店名总得有一个吧', true); $('#ea-name').focus(); return; }
+  const d=$('#ea-date').value;
+  const data={ name, dish:$('#ea-dish').value.trim(), price:$('#ea-price').value?+$('#ea-price').value:null,
+    loc:$('#ea-loc').value.trim(), ts:d?new Date(d+'T12:00:00').getTime():Date.now(),
+    stars:ui.eatStars||0, note:$('#ea-note').value.trim(), createdAt:Date.now(), updatedAt:Date.now() };
+  if(ui.eat && ui.eat.id){
+    const e=state.eats.find(x=>x.id===ui.eat.id);
+    Object.assign(e, data);
+  }else{
+    state.eats.push(Object.assign({id:uid()}, data));
+  }
+  save(); close('mEat'); renderAll(); toast('探店记录已保存 🍽️');
+}
+
+/* ================= 设置 ================= */
+function applyTheme(){
+  const t=state.settings.theme;
+  document.documentElement.dataset.theme = t==='auto' ? '' : t;
+}
+function renderSettings(){
+  const totalCooks=state.recipes.reduce((s,r)=>s+(r.cookedCount||0),0);
+  $('#statLine').textContent=`我的食谱 ${state.recipes.length} 道 · 累计做过 ${totalCooks} 次 · 探店 ${(state.eats||[]).length} 家 · 待买 ${state.shopping.filter(s=>!s.checked).length} 件 · 冰箱 ${(state.fridge||[]).length} 种食材`;
+  $('#themeSelect').value=state.settings.theme;
+}
+function doExport(){
+  const payload={app:'recipeBook', version:1, exportedAt:new Date().toISOString(), data:state};
+  downloadFile(`食谱小本备份-${today()}.json`, JSON.stringify(payload,null,2), 'application/json');
+  toast('备份文件已导出 ⬇️');
+}
+function mergeImport(d){
+  const rmap=new Map(state.recipes.map(r=>[r.id,r]));
+  let n=0;
+  d.recipes.forEach(r=>{
+    const ex=rmap.get(r.id);
+    if(!ex){ state.recipes.push(r); n++; }
+    else if((r.updatedAt||0)>(ex.updatedAt||0)){ Object.assign(ex,r); n++; }
+  });
+  const smap=new Map(state.shopping.map(s=>[s.id,s]));
+  (d.shopping||[]).forEach(s=>{ if(!smap.has(s.id)){ state.shopping.push(s); n++; } });
+  save(); renderAll(); toast(`合并完成，新增/更新 ${n} 条`);
+}
+function doImportText(text){
+  let j;
+  try{ j=JSON.parse(text.replace(/^\uFEFF/,'')); }catch(e){ toast('文件解析失败，不是有效的备份', true); return; }
+  const d=(j && j.data && Array.isArray(j.data.recipes)) ? j.data : (j && Array.isArray(j.recipes) ? j : null);
+  if(!d){ toast('文件格式不对', true); return; }
+  offerBackupImport(d);
+}
+function offerBackupImport(d){
+  confirmDialog({
+    title:'导入备份',
+    message:`备份里有 ${d.recipes.length} 道食谱、${(d.shopping||[]).length} 项购物清单。选择导入方式：`,
+    buttons:[
+      {text:'取消', ghost:true},
+      {text:'覆盖现有', danger:true, cb:()=>{
+        tombstone('recipes', state.recipes.map(r=>r.id));
+        tombstone('shopping', state.shopping.map(s=>s.id));
+        tombstone('eats', state.eats.map(e=>e.id));
+        state.recipes=d.recipes; state.shopping=d.shopping||[]; save(); renderAll(); toast('导入成功（已覆盖）');
+      }},
+      {text:'合并导入', cb:()=>mergeImport(d)}
+    ]
+  });
+}
+
+/* ================= 分享 / 导入菜谱 ================= */
+function b64EncodeUnicode(str){
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (m,p)=>String.fromCharCode(parseInt(p,16))));
+}
+function b64DecodeUnicode(b64){
+  return decodeURIComponent([...atob(b64)].map(ch=>'%'+('00'+ch.charCodeAt(0).toString(16)).slice(-2)).join(''));
+}
+function fallbackCopy(text, done){
+  const ta=document.createElement('textarea');
+  ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); done(); }
+  catch(e){ toast('复制失败，请长按手动复制', true); }
+  ta.remove();
+}
+function copyText(text, okMsg){
+  const done=()=>toast(okMsg);
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, ()=>fallbackCopy(text, done));
+  else fallbackCopy(text, done);
+}
+function recipeToText(r){
+  const lines=[`🍳【${r.name}】`];
+  const meta=[r.category, r.time?`约${r.time}分钟`:'', r.servings?`${r.servings}人份`:'', r.calories?`约${r.calories}千卡/份`:''].filter(Boolean).join(' · ');
+  if(meta) lines.push(meta);
+  if((r.ingredients||[]).length){
+    lines.push('', '食材：');
+    r.ingredients.forEach(i=>lines.push(`· ${i.name}${i.amount?' '+i.amount:''}${i.grams?`（约${i.grams}g）`:''}`));
+  }
+  if((r.steps||[]).length){
+    lines.push('', '做法：');
+    r.steps.forEach((s,i)=>lines.push(`${i+1}. ${s}`));
+  }
+  if(r.notes) lines.push('', '小贴士：'+r.notes);
+  if((r.tags||[]).length) lines.push('', '标签：'+r.tags.join('、'));
+  lines.push('', '—— 来自「食谱小本」');
+  return lines.join('\n');
+}
+function recipeToCode(r){
+  const slim={
+    name:r.name, category:r.category||'', time:r.time||null, servings:r.servings||null, calories:r.calories||null,
+    ingredients:(r.ingredients||[]).map(i=>({name:i.name, amount:i.amount||'', grams:i.grams??null})),
+    steps:r.steps||[], tags:r.tags||[], notes:r.notes||''
+  };
+  return b64EncodeUnicode(JSON.stringify(slim));
+}
+function parseShareInput(text){
+  text=(text||'').trim();
+  if(!text) return null;
+  if(text.startsWith('{')){
+    try{
+      const j=JSON.parse(text.replace(/^\uFEFF/,''));
+      const d=(j && j.data && Array.isArray(j.data.recipes)) ? j.data : (j && Array.isArray(j.recipes) ? j : null);
+      if(d) return {type:'backup', data:d};
+    }catch(e){}
+  }
+  const cands=[...new Set(text.match(/[A-Za-z0-9+/=]{40,}/g) || [])];
+  if(/^[A-Za-z0-9+/=]+$/.test(text)) cands.push(text);
+  const found=[];
+  cands.forEach(c=>{
+    try{
+      const obj=JSON.parse(b64DecodeUnicode(c));
+      if(obj && obj.name && (obj.ingredients||obj.steps)) found.push(obj);
+    }catch(e){}
+  });
+  if(!found.length) return null;
+  return found.length===1 ? {type:'recipe', data:found[0]} : {type:'recipes', data:found};
+}
+function importRecipesFromData(list){
+  const toNum=v=>{ const n=parseFloat(v); return isFinite(n)?n:null; };
+  const now=Date.now();
+  let added=0;
+  list.forEach(o=>{
+    state.recipes.push({
+      id:uid(), favorite:false, createdAt:now, updatedAt:now,
+      name:(o.name||'未命名').toString().trim()||'未命名',
+      category:o.category||'', time:toNum(o.time), servings:toNum(o.servings), calories:toNum(o.calories),
+      ingredients:(o.ingredients||[]).map(i=>({name:(i.name||'').toString().trim(), amount:i.amount||'', grams:i.grams==null||i.grams===''?null:toNum(i.grams)})).filter(i=>i.name),
+      steps:(o.steps||[]).map(s=>String(s).trim()).filter(Boolean),
+      tags:Array.isArray(o.tags)?o.tags:[],
+      notes:o.notes||'', image:null
+    });
+    added++;
+  });
+  save(); close('mImport'); setTab('recipes'); renderAll();
+  toast(`导入成功，新增 ${added} 道菜谱 📥`);
+}
+function renderShare(){
+  const r=state.recipes.find(x=>x.id===ui.shareId); if(!r) return;
+  const canNative=!!navigator.share;
+  $('#shareBody').innerHTML=`
+    <div class="rand-card" style="padding-top:0">
+      <div class="big">${ph(r)}</div>
+      <h2>${esc(r.name)}</h2>
+      <p class="muted" style="max-width:300px;margin:0 auto">发给朋友后，对方在「食谱小本」里点 <b>📥 导入菜谱</b>，粘贴就能收藏这道菜。</p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
+        ${canNative?'<button class="btn" data-action="share-native">📲 分享到微信等应用</button>':''}
+        <button class="btn ${canNative?'ghost':''}" data-action="share-text">📋 复制文字版菜谱</button>
+        <button class="btn ghost" data-action="share-code">🔗 复制分享码（可导入）</button>
+      </div>
+      <p class="muted" style="font-size:12px;margin-top:12px">分享码不含图片；文字版适合直接贴到聊天里。</p>
+    </div>`;
+}
+
+/* ================= 图片识别导入（本地 OCR） ================= */
+const OCR_STATUS={
+  'loading tesseract core':'下载识别核心…',
+  'initializing tesseract':'初始化引擎…',
+  'loading language traineddata':'下载中文语言包…',
+  'initializing api':'启动识别…',
+  'recognizing text':'识别文字中…'
+};
+function loadScript(src){
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src=src; s.onload=res;
+    s.onerror=()=>rej(new Error('script load failed'));
+    document.head.appendChild(s);
+  });
+}
+function renderOcr(){
+  $('#ocrBody').innerHTML=`
+    <div class="ocr-preview">${ui.ocr.image?`<img src="${ui.ocr.image}" alt="待识别的菜谱图片">`:'🖼<br>选择、拍照或粘贴一张菜谱图片'}</div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <label class="btn ghost" style="flex:1;position:relative;overflow:hidden">📷 选择 / 拍照<input id="fileOcr" type="file" accept="image/*" hidden></label>
+      ${ui.ocr.image?`<button class="btn" style="flex:1" data-action="ocr-run" ${ui.ocr.busy?'disabled':''}>${ui.ocr.busy?'识别中…':'🔍 开始识别'}</button>`:''}
+    </div>
+    <div id="ocrProg" style="display:${ui.ocr.busy?'block':'none'};margin-top:14px">
+      <div class="ocr-bar"><div class="ocr-bar-fill" id="ocrBarFill" style="width:${Math.round((ui.ocr.progress||0)*100)}%"></div></div>
+      <p class="muted" id="ocrStatus" style="font-size:12px;margin-top:6px">${esc(ui.ocr.statusText||'')}</p>
+    </div>
+    ${ui.ocr.error?`<p style="font-size:13px;color:var(--danger);margin-top:10px">${esc(ui.ocr.error)}</p>`:''}
+    <p class="muted" style="font-size:12px;margin-top:10px">适合菜谱截图、美食 App 卡片、手写菜谱等。识别完全在本机进行，图片不会上传。首次使用需联网下载中文识别引擎（约 5MB，之后有缓存）。识别完会进入编辑表单，请核对再保存。</p>`;
+}
+function ocrProgress(m){
+  ui.ocr.statusText=OCR_STATUS[m.status]||m.status;
+  ui.ocr.progress=m.progress||0;
+  const bar=$('#ocrBarFill'), st=$('#ocrStatus');
+  if(bar) bar.style.width=Math.round(ui.ocr.progress*100)+'%';
+  if(st) st.textContent=ui.ocr.statusText;
+}
+async function runOcr(){
+  if(!ui.ocr.image || ui.ocr.busy) return;
+  ui.ocr.busy=true; ui.ocr.error=''; ui.ocr.progress=0; ui.ocr.statusText='准备引擎…';
+  renderOcr();
+  try{
+    if(typeof Tesseract==='undefined'){
+      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js');
+    }
+    if(!ocrWorker){
+      ocrWorker = await Tesseract.createWorker('chi_sim', 1, {
+        langPath:'https://tessdata.projectnaptha.com/4.0.0_fast',
+        logger: ocrProgress
+      });
+    }
+    ui.ocr.statusText='识别文字中…';
+    const { data } = await ocrWorker.recognize(ui.ocr.image);
+    const text=((data&&data.text)||'').trim();
+    if(!text) throw new Error('empty');
+    const draft=parseRecipeText(text);
+    draft.image = await compressDataURL(ui.ocr.image, 900, 0.8);
+    ui.ocr.busy=false;
+    close('mOcr');
+    openForm(null, draft);
+    toast('识别完成，请核对后保存 ✏️');
+  }catch(e){
+    ui.ocr.busy=false;
+    ui.ocr.error = (e&&e.message==='empty')
+      ? '没有识别出文字，换一张更清晰、文字更大的图片试试。'
+      : '识别引擎加载失败。首次使用需要联网（下载约 5MB 引擎），且通过 http:// 方式打开本页（如 node server-test.js 或托管到网上），直接双击 file:// 打开时浏览器限制无法加载。';
+    renderOcr();
+  }
+}
+/* 把识别出的中文菜谱文本解析成结构化草稿（尽力而为，用户可在表单中修正） */
+function parseRecipeText(text){
+  const toNum=v=>{ const n=parseFloat(v); return isFinite(n)?n:null; };
+  const t=(text||'').replace(/\r/g,'');
+  const AMOUNT='(?:\\d+(?:\\.\\d+)?\\s*(?:千克|公斤|kg|KG|克|g|G|毫升|ml|mL|ML|升|L|l|大勺|小勺|汤匙|茶匙|勺|个|只|根|片|块|颗|瓣|把|包|袋|瓶|罐|盒|斤|两|条|张|枚|支|听|份|滴|段|朵|粒|卷|本)|适量|少许|若干|一些|半个|随意)';
+  const ingNameAmount=new RegExp('^(.{1,12}?)\\s*('+AMOUNT+')(?:左右|约)?\\s*$');
+  const secIng=/^(食材|用料|材料|配料|准备(?:材料|食材)?|主料|辅料|食材清单|用料清单|用料表)[:：、]?\s*$/;
+  const secStep=/^(做法|步骤|烹饪|制作|流程|做法步骤|制作步骤|烹饪步骤|制作方法|烹饪方法|做法如下|步骤如下)[:：]?\s*$/;
+  const secNote=/^(小贴士|贴士|提示|注意|要点|小窍门|技巧|备注)[:：]?\s*$/;
+
+  const lines=t.split('\n').map(l=>l.replace(/\s+/g,' ').trim()).filter(Boolean);
+  let section='head';
+  const head=[], ings=[], stepLines=[], notes=[];
+  lines.forEach(raw=>{
+    let l=raw
+      .replace(/^[-•·—–_]+/,'')
+      .replace(/^[（(]?[0-9]{1,2}\s*[.、)）]\s*/,'')
+      .replace(/^[①②③④⑤⑥⑦⑧⑨⑩⑪⑫]\s*/,'')
+      .replace(/^第?[0-9一二两三四五六七八九十]{1,3}步[:：.、]?\s*/,'')
+      .trim();
+    if(!l) return;
+    if(secIng.test(l)){ section='ing'; return; }
+    if(secStep.test(l)){ section='step'; return; }
+    if(secNote.test(l)){ section='note'; return; }
+    // 「食材：鸡蛋 3个」这类同行写法
+    const mI=l.match(/^(?:食材|用料|材料|配料|准备材料|准备食材|主料|辅料|食材清单|用料清单|用料表)[:：、]\s*(.+)$/);
+    if(mI){ section='ing'; ings.push(mI[1].trim()); return; }
+    const mS=l.match(/^(?:做法|步骤|烹饪|制作|流程|做法步骤|制作步骤|烹饪步骤|制作方法|烹饪方法|做法如下|步骤如下)[:：]\s*(.+)$/);
+    if(mS){ section='step'; stepLines.push(mS[1].trim()); return; }
+    const mN=l.match(/^(?:小贴士|贴士|提示|注意|要点|小窍门|技巧|备注)[:：]\s*(.+)$/);
+    if(mN){ section='note'; notes.push(mN[1].trim()); return; }
+    if(section==='ing' && secStep.test(l.replace(/^第?[0-9一二两三四五六七八九十]{1,3}[.、:：]?\s*/,''))) { section='step'; return; }
+    if(section==='head') head.push(l);
+    else if(section==='ing') ings.push(l);
+    else if(section==='step') stepLines.push(l);
+    else notes.push(l);
+  });
+
+  // 名称：标题区里第一条不太长、也不像食材行的文字
+  let name='';
+  const headClean=head.filter(l=>!ingNameAmount.test(l));
+  if(headClean.length) name=headClean.find(l=>l.length<=15)||headClean[0];
+
+  // 食材行：名称 + 用量（+克数）
+  const ingredients=ings.map(l=>{
+    const m=l.match(ingNameAmount);
+    let n=l, amount='';
+    if(m){ n=m[1].trim(); amount=m[2].trim(); }
+    n=n.replace(/[：:]\s*$/,'').trim();
+    let grams=null;
+    const gm=amount.match(/^(\d+(?:\.\d+)?)\s*(克|g|G|千克|公斤|kg|KG)$/);
+    if(gm) grams=Math.round(parseFloat(gm[1])*(gm[2]==='克'||gm[2]==='g'||gm[2]==='G'?1:1000));
+    return {name:n, amount, grams};
+  }).filter(i=>i.name);
+
+  // 步骤：长句按句号拆分
+  let steps=[];
+  stepLines.forEach(l=>{
+    const parts = l.length>40 ? l.split('。').map((p,i,a)=>p+(i<a.length-1?'。':'')).filter(p=>p.trim().length>1) : [l];
+    steps.push(...parts);
+  });
+  steps=steps.map(s=>s.replace(/^[（(]?[0-9]{1,2}\s*[.、)）]\s*/,'').replace(/^[①②③④⑤⑥⑦⑧⑨⑩⑪⑫]\s*/,'').replace(/^第?[0-9一二两三四五六七八九十]{1,3}步[:：.、]?\s*/,'').trim())
+    .filter(s=>s.length>=2 && !(/^[烹豪妊]饪?时间|^时间/.test(s) && /(分钟|小时)/.test(s) && s.length<=30));
+
+  // 没有小节标题时兜底：第一行当菜名，其余当步骤
+  if(!ingredients.length && !steps.length && head.length){
+    name=head[0];
+    steps=head.slice(1).filter(l=>l.length>=2);
+  }
+
+  // 元信息（优先取带「时间/时长」标签的，避免步骤里「煮15分钟」干扰）
+  const mMinMeta=t.match(/(?:烹饪时间|时间|时长|耗时)[^0-9]{0,4}(\d+(?:\.\d+)?)\s*分钟/);
+  const mHourMeta=t.match(/(?:烹饪时间|时间|时长|耗时)[^0-9]{0,4}(\d+(?:\.\d+)?)\s*(?:个)?小时/);
+  const mMin=t.match(/(\d+(?:\.\d+)?)\s*分钟/);
+  const mHour=t.match(/(\d+(?:\.\d+)?)\s*(?:个)?小时/);
+  const mm=mMinMeta||mHourMeta||mMin||mHour;
+  // 元信息（优先取带「时间/时长」标签的，避免步骤里「煮15分钟」干扰）
+  const pickTime = mMinMeta ? {v:mMinMeta[1], u:'m'}
+    : mHourMeta ? {v:mHourMeta[1], u:'h'}
+    : mMin ? {v:mMin[1], u:'m'}
+    : mHour ? {v:mHour[1], u:'h'} : null;
+  const time = pickTime ? (pickTime.u==='m' ? Math.round(parseFloat(pickTime.v)) : Math.round(parseFloat(pickTime.v)*60)) : null;
+  const mServ=t.match(/(\d+)\s*人\s*份/) || t.match(/(?:份量|分量)[:：]?\s*(\d+)/) || t.match(/(\d+)\s*人(?:量|食)/);
+  const servings=mServ?parseInt(mServ[1],10):null;
+  const mCal=t.match(/(\d+(?:\.\d+)?)\s*(?:千卡|大卡|kcal|Kcal|KCAL)/);
+  const calories=mCal?Math.round(parseFloat(mCal[1])):null;
+
+  return {
+    name:(name||'未命名菜谱').replace(/^[「『【]/,'').replace(/[」』】]$/,'').slice(0,30),
+    category:'', time, servings, cal:calories,
+    ingredients:ingredients.slice(0,40),
+    steps:steps.slice(0,25),
+    tagsStr:'', notes:notes.join(' '), image:null
+  };
+}
+
+/* ================= 随机推荐 ================= */
+function doRandom(){
+  const pool=recipePool();
+  if(!pool.length){ toast('先添加几道食谱吧'); return; }
+  ui.randomId=pool[Math.floor(Math.random()*pool.length)].id;
+  renderRandom(); open('mRandom');
+}
+function renderRandom(){
+  const r=findRecipe(ui.randomId); if(!r) return;
+  $('#randomBody').innerHTML=`
+    <div class="rand-card">
+      <div class="big">${r.image?'':ph(r)}</div>
+      ${r.image?`<img src="${r.image}" style="width:180px;height:120px;object-fit:cover;border-radius:14px;margin:0 auto 10px">`:''}
+      <h2>${esc(r.name)}</h2>
+      <p class="muted">${esc(r.category||'未分类')}${r.time?` · 约 ${r.time} 分钟`:''}${r.servings?` · ${r.servings} 人份`:''}</p>
+      <div class="rand-btns">
+        <button class="btn ghost" data-action="random-again">换一个</button>
+        <button class="btn" data-action="random-open">去看看 👀</button>
+      </div>
+    </div>`;
+}
+
+/* ================= 全局事件（点击委托） ================= */
+document.addEventListener('click', e=>{
+  // 勾选框：接管 click（阻止默认切换），手动翻转状态，保证各环境行为一致
+  const chkShop = e.target.closest('input[data-check-shop]');
+  if(chkShop){
+    e.preventDefault();
+    const s=state.shopping.find(x=>x.id===chkShop.dataset.checkShop);
+    if(s){ s.checked=!s.checked; save(); renderAll(); }
+    return;
+  }
+  const chkIng = e.target.closest('input[data-check-ing]');
+  if(chkIng){
+    e.preventDefault();
+    const key=ui.detail+':'+chkIng.dataset.checkIng;
+    if(ui.checkedIng.has(key)) ui.checkedIng.delete(key); else ui.checkedIng.add(key);
+    chkIng.checked = ui.checkedIng.has(key);
+    return;
+  }
+
+  const el=e.target.closest('[data-action],[data-tab],[data-ci]');
+  if(!el) return;
+
+  // Tab 按钮
+  if(el.dataset.tab){ setTab(el.dataset.tab); return; }
+
+  // 确认框按钮
+  if(el.dataset.ci!==undefined){
+    const b=ui.confirmBtns[+el.dataset.ci];
+    close('mConfirm');
+    if(b && b.cb) b.cb();
+    return;
+  }
+
+  const act=el.dataset.action;
+  switch(act){
+    case 'close': close(el.dataset.m); break;
+    case 'new-recipe': openForm(null); break;
+    case 'open-detail': openDetail(el.dataset.id); break;
+    case 'edit': close('mDetail'); openForm(el.dataset.id); break;
+    case 'fav': {
+      const r=state.recipes.find(x=>x.id===el.dataset.id);
+      if(r){ r.favorite=!r.favorite; save(); renderRecipes(); if($('#mDetail').classList.contains('open')) renderDetail(); }
+      break;
+    }
+    case 'del-recipe': {
+      const r=state.recipes.find(x=>x.id===el.dataset.id); if(!r) return;
+      confirmDialog({
+        title:'删除食谱', message:`确定删除「${r.name}」吗？此操作无法撤销。`,
+        buttons:[{text:'取消',ghost:true},{text:'删除',danger:true,cb:()=>{
+          tombstone('recipes',[r.id]);
+          state.recipes=state.recipes.filter(x=>x.id!==r.id);
+          save(); close('mDetail'); renderAll(); toast('已删除');
+        }}]
+      });
+      break;
+    }
+    case 'add-shop-from': addFromRecipe(el.dataset.id); break;
+    case 'hero-settings': setTab('settings'); break;
+    case 'inspire-again': pickInspire(); renderInspire(); break;
+    case 'inspire-go': ui.comboIds=[...(ui.inspire||[])]; renderCombo(); open('mCombo'); break;
+    case 'combo-open': close('mCombo'); openDetail(el.dataset.id); break;
+    case 'combo-shop': {
+      let added=0;
+      (ui.comboIds||[]).forEach(id=>{
+        const r=findRecipe(id); if(!r) return;
+        (r.ingredients||[]).forEach(i=>{
+          const amt=[i.amount, i.grams?i.grams+'g':''].filter(Boolean).join(' · ');
+          if(addShopItem(i.name, amt, r.name)) added++;
+        });
+      });
+      save(); renderAll(); close('mCombo');
+      toast(added?`已把这套菜单的食材加入购物清单（${added} 项）🛒`:'食材都已经在清单里啦');
+      break;
+    }
+    case 'cook-log-add': openCookLog(el.dataset.id, null); break;
+    case 'cook-log-edit': openCookLog(el.dataset.id, el.dataset.e); break;
+    case 'cook-log-del': {
+      const r=state.recipes.find(x=>x.id===el.dataset.id); if(!r || !el.dataset.e) break;
+      confirmDialog({title:'删除记录', message:'删除这条烹饪记录？做过次数会同步减一。',
+        buttons:[{text:'取消',ghost:true},{text:'删除',danger:true,cb:()=>{
+          r.cooks=(r.cooks||[]).filter(c=>c.id!==el.dataset.e);
+          r.cookedCount=r.cooks.length; r.updatedAt=Date.now();
+          save(); close('mCookLog'); renderAll();
+          if($('#mDetail').classList.contains('open')) renderDetail();
+          toast('已删除该条记录');
+        }}]});
+      break;
+    }
+    case 'cook-log-save': saveCookLog(); break;
+    case 'cl-photo-rm': ui.clog.photo=null; refreshCookPhoto(); break;
+    case 'star': {
+      const v=+el.dataset.v;
+      if(el.dataset.g==='cook'){ ui.clog.stars=v; renderCookStars(); }
+      else { ui.eatStars=v; $('#ea-stars').innerHTML=starsHtml('eat', v); }
+      break;
+    }
+    case 'eat-add': openEat(null); break;
+    case 'eat-edit': openEat(el.dataset.id); break;
+    case 'eat-save': saveEat(); break;
+    case 'eat-del': {
+      const e=state.eats.find(x=>x.id===el.dataset.id); if(!e) break;
+      confirmDialog({title:'删除探店', message:`删除「${e.name}」的记录？`,
+        buttons:[{text:'取消',ghost:true},{text:'删除',danger:true,cb:()=>{
+          tombstone('eats',[e.id]);
+          state.eats=state.eats.filter(x=>x.id!==e.id);
+          save(); close('mEat'); renderAll(); toast('已删除');
+        }}]});
+      break;
+    }
+    case 'cook-done': case 'mark-cooked': {
+      const r=markCooked(el.dataset.id);
+      if(!r) break;
+      renderAll();
+      toast(`记录成功！「${r.name}」已经做过 ${r.cookedCount} 次 🎉`);
+      if($('#mDetail').classList.contains('open')) renderDetail();
+      if($('#mCook').classList.contains('open')) renderCook();
+      break;
+    }
+    case 'lib-mode': ui.libMode=el.dataset.m; ui.cat='all'; ui.inspire=null; renderRecipes(); break;
+    case 'fridge-rec':
+      if(ui.recMode==='fridge'){ ui.recMode=null; renderRecipes(); break; }
+      if(!(state.fridge||[]).length){ toast('先去冰箱记点食材吧 🧊'); setTab('fridge'); break; }
+      ui.recMode='fridge'; setTab('recipes'); break;
+    case 'save-builtin': {
+      const b=BUILTIN.find(x=>x.id===el.dataset.id); if(!b) break;
+      if(state.recipes.some(x=>x.libId===b.id)){ toast('这道已经在你的食谱里啦'); break; }
+      const copy=JSON.parse(JSON.stringify(b));
+      delete copy.lib;
+      state.recipes.push(Object.assign(copy, {id:uid(), libId:b.id, favorite:false, createdAt:Date.now(), updatedAt:Date.now()}));
+      save(); renderAll(); renderDetail(); toast('已存入我的食谱，可自由修改 ✅');
+      break;
+    }
+    case 'cook-check': ui.cookRecipeId=el.dataset.id; renderCook(); open('mCook'); break;
+    case 'open-cook': ui.cookRecipeId=null; renderCook(); open('mCook'); break;
+    case 'cook-recipe': ui.cookRecipeId=el.dataset.id; renderCook(); break;
+    case 'cook-back': ui.cookRecipeId=null; renderCook(); break;
+    case 'cook-open-detail': close('mCook'); openDetail(el.dataset.id); break;
+    case 'cook-add-missing': {
+      const r=findRecipe(el.dataset.id); if(!r) break;
+      const {need}=matchFridge(r);
+      let added=0; const skipped=[];
+      need.forEach(i=>{
+        const amt=[i.amount, i.grams?i.grams+'g':''].filter(Boolean).join(' · ');
+        if(addShopItem(i.name, amt, r.name)) added++;
+        else skipped.push(i.name.trim());
+      });
+      save(); renderAll();
+      toast(added ? `已把 ${added} 样缺的加入购物清单 🛒${skipped.length?`（${skipped.join('、')}已在清单）`:''}` : '缺的都已经在购物清单里了');
+      break;
+    }
+
+    // 冰箱
+    case 'fridge-add': addFridgeFromInputs(); break;
+    case 'fridge-quick': {
+      const res=addFridgeItem(el.dataset.k, '');
+      save(); renderAll();
+      toast(res==='dup' ? '冰箱里已经有 ' + el.dataset.k + ' 啦' : '已存入冰箱 🧊');
+      break;
+    }
+    case 'fridge-del': tombstone('fridge',[el.dataset.id]); state.fridge=state.fridge.filter(x=>x.id!==el.dataset.id); save(); renderAll(); break;
+    case 'fridge-edit': {
+      const it=state.fridge.find(x=>x.id===el.dataset.id); if(!it) break;
+      ui.fridgeEditId=it.id;
+      $('#fe-name').value=it.name; $('#fe-amt').value=it.amount||'';
+      const d=new Date(it.boughtAt||it.createdAt||Date.now());
+      $('#fe-bought').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      $('#fe-days').value=it.days??'';
+      $('#fe-days').placeholder = '自动估算：'+shelfDays(it.name)+' 天';
+      open('mFridgeEdit'); break;
+    }
+    case 'fridge-edit-save': {
+      const it=state.fridge.find(x=>x.id===ui.fridgeEditId); if(!it) break;
+      const name=$('#fe-name').value.trim();
+      if(!name){ toast('名称不能为空', true); break; }
+      it.name=name; it.amount=$('#fe-amt').value.trim();
+      const dv=$('#fe-bought').value;
+      it.boughtAt = dv ? new Date(dv+'T12:00:00').getTime() : Date.now();
+      const days=$('#fe-days').value;
+      it.days = days ? +days : null;
+      save(); close('mFridgeEdit'); renderAll(); toast('已更新 🧊');
+      break;
+    }
+    case 'fridge-edit-del': {
+      const it=state.fridge.find(x=>x.id===ui.fridgeEditId); if(!it) break;
+      tombstone('fridge',[it.id]);
+      state.fridge=state.fridge.filter(x=>x.id!==it.id);
+      save(); close('mFridgeEdit'); renderAll(); toast('已从冰箱移除');
+      break;
+    }
+
+    case 'share': ui.shareId=el.dataset.id; renderShare(); open('mShare'); break;
+    case 'share-text': {
+      const r=state.recipes.find(x=>x.id===ui.shareId);
+      if(r) copyText(recipeToText(r), '文字版菜谱已复制 📋');
+      break;
+    }
+    case 'share-code': {
+      const r=state.recipes.find(x=>x.id===ui.shareId);
+      if(r) copyText(`🍳【${r.name}】的分享码（朋友在「食谱小本」点「导入菜谱」粘贴即可）：\n${recipeToCode(r)}`, '分享码已复制，发给朋友吧 📤');
+      break;
+    }
+    case 'share-native': {
+      const r=state.recipes.find(x=>x.id===ui.shareId);
+      if(r && navigator.share) navigator.share({title:r.name, text:recipeToText(r)}).catch(()=>{});
+      break;
+    }
+    case 'open-import': $('#importText').value=''; open('mImport'); break;
+    case 'open-ocr': ui.ocr={image:null,busy:false,progress:0,statusText:'',error:''}; renderOcr(); open('mOcr'); break;
+    case 'ocr-run': runOcr(); break;
+    case 'import-parse': {
+      const res=parseShareInput($('#importText').value);
+      if(!res){ toast('没有识别出有效的分享码或备份内容', true); break; }
+      if(res.type==='backup'){ close('mImport'); offerBackupImport(res.data); break; }
+      importRecipesFromData(res.type==='recipes'?res.data:[res.data]);
+      break;
+    }
+    case 'cat': ui.cat=el.dataset.k; renderRecipes(); break;
+    case 'random': doRandom(); break;
+    case 'random-again': doRandom(); break;
+    case 'random-open': close('mRandom'); openDetail(ui.randomId); break;
+
+    // 表单
+    case 'save-recipe': saveRecipe(); break;
+    case 'ing-add': syncFormFromDom(); ui.form.ingredients.push({name:'',amount:'',grams:''}); renderIngList(); break;
+    case 'ing-del': {
+      syncFormFromDom(); const i=+el.dataset.i;
+      if(ui.form.ingredients.length>1) ui.form.ingredients.splice(i,1);
+      else ui.form.ingredients=[{name:'',amount:'',grams:''}];
+      renderIngList(); break;
+    }
+    case 'step-add': syncFormFromDom(); ui.form.steps.push(''); renderStepList(); break;
+    case 'step-del': syncFormFromDom(); const di=+el.dataset.i;
+      if(ui.form.steps.length>1) ui.form.steps.splice(di,1); else ui.form.steps=[''];
+      renderStepList(); break;
+    case 'step-up': case 'step-down': {
+      syncFormFromDom(); const i=+el.dataset.i, j=act==='step-up'?i-1:i+1;
+      if(j>=0 && j<ui.form.steps.length){ [ui.form.steps[i],ui.form.steps[j]]=[ui.form.steps[j],ui.form.steps[i]]; renderStepList(); }
+      break;
+    }
+    case 'img-rm': syncFormFromDom(); ui.form.image=null; refreshImgPreview(); break;
+
+    // 购物
+    case 'shop-add': {
+      const n=$('#shopName'), a=$('#shopAmt');
+      if(!n.value.trim()){ toast('先输入要买的东西', true); n.focus(); break; }
+      if(addShopItem(n.value, a.value, '')){ save(); renderAll(); n.value=''; a.value=''; n.focus(); }
+      else toast('清单里已经有这项了');
+      break;
+    }
+    case 'shop-del': tombstone('shopping',[el.dataset.id]); state.shopping=state.shopping.filter(s=>s.id!==el.dataset.id); save(); renderAll(); break;
+    case 'shop-clear-done':
+      if(state.shopping.some(s=>s.checked)){
+        tombstone('shopping', state.shopping.filter(s=>s.checked).map(s=>s.id));
+        state.shopping=state.shopping.filter(s=>!s.checked); save(); renderAll(); toast('已清除已买项目');
+      }
+      else toast('还没有已买的项目');
+      break;
+    case 'shop-copy': {
+      const pend=state.shopping.filter(s=>!s.checked);
+      if(!pend.length){ toast('待买清单是空的'); break; }
+      const text='🛒 购物清单\n'+pend.map((s,i)=>`${i+1}. ${s.name}${s.amount?'（'+s.amount+'）':''}`).join('\n');
+      copyText(text, '清单已复制，去粘贴吧 📋');
+      break;
+    }
+    case 'open-pick': {
+      const list=state.recipes;
+      $('#pickList').innerHTML = list.length
+        ? `<p class="muted" style="font-size:13px;margin-bottom:10px">点一道菜，它的食材会自动加入购物清单（自动去重）。</p>`+
+          list.map(r=>`<div class="shop-item" data-action="pick-recipe" data-id="${r.id}" style="cursor:pointer">
+            <span style="font-size:22px">${ph(r)}</span>
+            <div class="si-main"><span>${esc(r.name)}</span><i class="src">${esc(r.category||'未分类')} · ${(r.ingredients||[]).length} 种食材</i></div>
+            <span class="muted">›</span></div>`).join('')
+        : `<div class="empty"><div class="big"> cookbook</div><p>还没有食谱，先去记一道吧</p></div>`;
+      open('mPick'); break;
+    }
+    case 'pick-recipe': close('mPick'); addFromRecipe(el.dataset.id); break;
+
+    // 购物清单导出
+    case 'open-shop-export': renderShopExport(); open('mShopExport'); break;
+    case 'shop-dl-txt':
+      downloadFile(`购物清单-${today()}.txt`, shopExportText(), 'text/plain;charset=utf-8');
+      close('mShopExport'); toast('清单文件已导出 ⬇️');
+      break;
+    case 'shop-dl-csv':
+      downloadFile(`购物清单-${today()}.csv`, shopExportCsv(), 'text/csv;charset=utf-8');
+      close('mShopExport'); toast('表格文件已导出 ⬇️');
+      break;
+    case 'shop-share':
+      if(navigator.share) navigator.share({title:'购物清单', text:shopExportText()}).catch(()=>{});
+      break;
+
+    // 设置
+    case 'export': doExport(); break;
+    case 'import': $('#fileImport').click(); break;
+    case 'sync-now': doSync(true); break;
+    case 'seed':
+      if(state.recipes.length){
+        confirmDialog({title:'载入示例', message:'将额外加入 4 道示例食谱，确定吗？', buttons:[{text:'取消',ghost:true},{text:'载入',cb:()=>{seedSamples();renderAll();toast('示例已载入 🍳');}}]});
+      }else{ seedSamples(); renderAll(); toast('示例已载入 🍳'); }
+      break;
+    case 'wipe':
+      confirmDialog({title:'清空所有数据', message:'所有食谱和购物清单都会被删除，且无法恢复。确定继续吗？',
+        buttons:[{text:'取消',ghost:true},{text:'全部清空',danger:true,cb:()=>{
+          tombstone('recipes', state.recipes.map(r=>r.id));
+          tombstone('shopping', state.shopping.map(s=>s.id));
+          tombstone('fridge', state.fridge.map(f=>f.id));
+          tombstone('eats', state.eats.map(e=>e.id));
+          state={recipes:[],shopping:[],fridge:[],eats:[],settings:state.settings,firstDone:true,tombstones:state.tombstones};
+          save(); renderAll(); toast('已清空');
+        }}]});
+      break;
+
+    // 欢迎
+    case 'welcome-seed': state.firstDone=true; seedSamples(); close('mWelcome'); renderAll(); toast('已为你放上 4 道示例菜 🍳'); break;
+    case 'welcome-skip': state.firstDone=true; save(); close('mWelcome'); break;
+  }
+});
+
+/* 勾选框（change 委托） */
+document.addEventListener('change', e=>{
+  const t=e.target;
+  if(t.id==='themeSelect'){ state.settings.theme=t.value; applyTheme(); save(); toast('主题已切换'); }
+  if(t.id==='fileImport'){
+    const f=t.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>doImportText(r.result);
+    r.readAsText(f);
+    t.value='';
+  }
+  if(t.id==='fileImg'){
+    const f=t.files[0]; if(!f || !ui.form) return;
+    compressImage(f).then(url=>{ syncFormFromDom(); ui.form.image=url; refreshImgPreview(); toast('图片已加入'); })
+      .catch(()=>toast('图片处理失败', true));
+    t.value='';
+  }
+  if(t.id==='fileOcr'){
+    const f=t.files[0]; if(!f) return;
+    compressImage(f, 1600, 0.9).then(url=>{ ui.ocr.image=url; ui.ocr.error=''; renderOcr(); })
+      .catch(()=>{ ui.ocr.error='图片读取失败'; renderOcr(); });
+    t.value='';
+  }
+  if(t.id==='fileCookLogImg'){
+    const f=t.files[0]; if(!f || !ui.clog) return;
+    compressImage(f, 600, 0.78).then(url=>{ ui.clog.photo=url; refreshCookPhoto(); })
+      .catch(()=>toast('图片处理失败', true));
+    t.value='';
+  }
+});
+
+/* 识别弹窗打开时，支持直接粘贴截图 */
+document.addEventListener('paste', e=>{
+  if(!$('#mOcr').classList.contains('open')) return;
+  const items=((e.clipboardData||{}).items)||[];
+  for(const it of items){
+    if(it.type && it.type.indexOf('image/')===0){
+      const f=it.getAsFile();
+      if(f){
+        e.preventDefault();
+        compressImage(f, 1600, 0.9).then(url=>{ ui.ocr.image=url; ui.ocr.error=''; renderOcr(); toast('已获取粘贴的图片'); })
+          .catch(()=>toast('图片读取失败', true));
+        return;
+      }
+    }
+  }
+});
+
+/* 搜索 & 购物输入回车 */
+document.addEventListener('input', e=>{
+  if(e.target.id==='searchInput'){ ui.recMode=null; ui.search=e.target.value; renderRecipes(); }
+  if(e.target.id==='eatSearch'){ ui.eatSearch=e.target.value; renderEats(); }
+  if(e.target.id==='fridgeName'){ updateFridgeHint(); }
+});
+document.addEventListener('keydown', e=>{
+  if(e.key==='Enter' && (e.target.id==='fridgeName'||e.target.id==='fridgeAmt')){ addFridgeFromInputs(); return; }
+  if(e.key==='Enter' && (e.target.id==='shopName'||e.target.id==='shopAmt')){
+    const n=$('#shopName'), a=$('#shopAmt');
+    if(n.value.trim()){
+      if(addShopItem(n.value,a.value,'')){ save(); renderAll(); n.value=''; a.value=''; n.focus(); }
+      else toast('清单里已经有这项了');
+    }
+  }
+});
+
+/* ================= 启动 ================= */
+applyTheme();
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{ if(state.settings.theme==='auto') applyTheme(); });
+setTab('recipes');
+doSync();
+if(!state.firstDone) open('mWelcome');
+// 冰箱保鲜提醒
+setTimeout(()=>{
+  const soon=(state.fridge||[]).filter(it=>{ const i=expiryInfo(it); return !i.staple && i.remain<=1; }).length;
+  if(soon) toast(`🧊 冰箱里有 ${soon} 样食材快到期，尽快吃掉吧`);
+}, 900);
+</script>
+</body>
+</html>

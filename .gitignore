@@ -1,0 +1,16 @@
+# 本地数据库与运行时产物
+recipes.db
+recipes.db-journal
+recipes.db-wal
+recipes.db-shm
+recipes.db.json
+
+# 依赖与日志
+node_modules/
+*.log
+
+# 系统/编辑器
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
