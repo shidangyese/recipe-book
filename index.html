@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -47,15 +47,16 @@
     --shadow:0 2px 5px rgba(0,0,0,.35),0 8px 20px rgba(0,0,0,.28);
   }
 }
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;touch-action:manipulation;overscroll-behavior:none}
 body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
   background:var(--bg); color:var(--text); font-size:15px; line-height:1.5;
   padding-bottom:calc(70px + env(safe-area-inset-bottom));
+  overscroll-behavior:none;
 }
 button{font-family:inherit;cursor:pointer;color:inherit}
 input,textarea,select{font-family:inherit;font-size:15px;color:var(--text)}
-img{display:block}
+img{display:block;-webkit-user-drag:none;user-select:none}
 
 /* ========== 2. 通用组件 ========== */
 .input{
@@ -827,6 +828,25 @@ select.input{appearance:auto}
 
 <script>
 'use strict';
+/* ===== 禁用双击 / 双指缩放与拖动回弹，App 内更像原生 ===== */
+(()=>{
+  let lastTap = 0, lastX = 0, lastY = 0, blocked = false;
+  const SEL = 'button,a,input,textarea,select,label,summary,[role="button"],[contenteditable]';
+  const isUI = t => !!(t && t.closest && t.closest(SEL));
+  const stop = e => e.preventDefault();
+  addEventListener('gesturestart', stop, { passive: false });      // iOS 双指缩放
+  addEventListener('gesturechange', stop, { passive: false });
+  addEventListener('touchstart', e => {
+    if (e.touches.length > 1) { e.preventDefault(); return; }     // 双指
+    const t = e.touches[0], now = Date.now();
+    blocked = now - lastTap < 320 && Math.hypot(t.clientX - lastX, t.clientY - lastY) < 32 && !isUI(e.target);
+    if (blocked) e.preventDefault();                              // 空白/文字处双击：拦掉放大
+    lastTap = now; lastX = t.clientX; lastY = t.clientY;
+  }, { passive: false });
+  addEventListener('touchend', e => { if (blocked) e.preventDefault(); }, { passive: false });
+  addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false }); // 桌面 Ctrl+滚轮
+})();
 /* ================= 数据 ================= */
 const LS_KEY = 'recipeBook.v1';
 const DEFAULT_STATE = { recipes: [], shopping: [], fridge: [], eats: [], settings: { theme: 'auto' }, firstDone: false, tombstones: { recipes: {}, shopping: {}, fridge: {}, eats: {} } };
